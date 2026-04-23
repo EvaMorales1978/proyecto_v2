@@ -36,6 +36,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Proyecto_v2Theme {
+              //  Navigation()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     // 3. Llamada a tu pantalla principal pasando el viewModel configurado
                     MainScreen(

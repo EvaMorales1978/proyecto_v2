@@ -61,6 +61,44 @@ class OdooClient(private val baseUrl: String) {
         uid: Int,
         pass: String,
         model: String,
+        fields: List<String>,
+        domain: JsonArray = buildJsonArray { }
+    ): JsonArray {
+        val response: HttpResponse = client.post("$baseUrl/jsonrpc") {
+            contentType(ContentType.Application.Json)
+            setBody(buildJsonObject {
+                put("jsonrpc", "2.0")
+                put("method", "call")
+                put("params", buildJsonObject {
+                    put("service", "object")
+                    put("method", "execute_kw")
+                    put("args", buildJsonArray {
+                        add(db)
+                        add(uid)
+                        add(pass)
+                        add(model)
+                        add("search_read")
+                        add(domain) // Posición 6: El dominio (filtro)
+                    })
+                    // Los campos opcionales van aquí
+                    put("kwargs", buildJsonObject {
+                        put("fields", buildJsonArray {
+                            fields.forEach { add(it) }
+                        })
+                    })
+                })
+                put("id", 2)
+            })
+        }
+        val responseText = response.bodyAsText()
+        val body = Json.parseToJsonElement(responseText).jsonObject
+        return body["result"]?.jsonArray ?: JsonArray(emptyList())
+    }
+    /*suspend fun searchRead(
+        db: String,
+        uid: Int,
+        pass: String,
+        model: String,
         fields: List<String>
     ): JsonArray {
         val response: HttpResponse = client.post("$baseUrl/jsonrpc") {
@@ -88,5 +126,5 @@ class OdooClient(private val baseUrl: String) {
         }
         val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
         return body["result"]?.jsonArray ?: JsonArray(emptyList())
-    }
+    }*/
 }
