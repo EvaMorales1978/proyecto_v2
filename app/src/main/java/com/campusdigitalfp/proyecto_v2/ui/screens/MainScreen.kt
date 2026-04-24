@@ -1,5 +1,6 @@
 package com.campusdigitalfp.proyecto.screens
 
+import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -18,7 +19,6 @@ import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
 import com.campusdigitalfp.proyecto_v2.R
-import com.campusdigitalfp.proyecto_v2.ui.viewmodel.MainViewModel
 
 
 @Composable
@@ -45,7 +45,10 @@ fun MainScreen( navController: NavController ,url:String, uid: Int,pass:String) 
             )
 
             Button(
-                onClick = { navController.navigate("scanerorigen") } ,
+                onClick = {
+                    val encodedUrl = Uri.encode(url)
+                    navController.navigate("scanerorigen/$encodedUrl/$uid/$pass")
+                          } ,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)

@@ -94,13 +94,15 @@ class OdooClient(private val baseUrl: String) {
         val body = Json.parseToJsonElement(responseText).jsonObject
         return body["result"]?.jsonArray ?: JsonArray(emptyList())
     }
-    /*suspend fun searchRead(
+
+    suspend fun callKw(
         db: String,
         uid: Int,
         pass: String,
         model: String,
-        fields: List<String>
-    ): JsonArray {
+        method: String,
+        args: JsonArray
+    ): JsonElement {
         val response: HttpResponse = client.post("$baseUrl/jsonrpc") {
             contentType(ContentType.Application.Json)
             setBody(buildJsonObject {
@@ -114,17 +116,16 @@ class OdooClient(private val baseUrl: String) {
                         add(uid)
                         add(pass)
                         add(model)
-                        add("search_read")
-                        add(buildJsonArray { }) // Dominio []
-                        add(buildJsonObject {
-                            put("fields", buildJsonArray { fields.forEach { add(it) } })
-                        })
+                        add(method)
+                        add(args)
                     })
                 })
-                put("id", 2)
+                put("id", 3)
             })
         }
         val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-        return body["result"]?.jsonArray ?: JsonArray(emptyList())
-    }*/
+        return body["result"] ?: JsonPrimitive("false")
+    }
+
+
 }
