@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">proyecto_v2</string>
+    <string name="buscar_procedencia">Buscar Procedencia</string>
+    <string name="mercanc_a_necesaria">Mercancía Necesaria\n</string>
+    <string name="reparto">Reparto</string>
+    <string name="acerca_de">Acerca de</string>
 </resources>

@@ -26,8 +26,8 @@ class OdooRepository(private val client: OdooClient) {
         }
     }
 
-    suspend fun fetchInitialData(): OdooDataPackage = coroutineScope {
-        val uid = client.authenticate(db , user , pass)
+    suspend fun fetchInitialData(uid: Int): OdooDataPackage = coroutineScope {
+       // val uid = client.authenticate(db , user , pass)
 
 
         val pickingDomain = buildJsonArray {
