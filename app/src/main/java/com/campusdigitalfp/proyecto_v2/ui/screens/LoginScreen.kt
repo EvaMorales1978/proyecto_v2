@@ -18,10 +18,11 @@ import com.campusdigitalfp.proyecto_v2.ui.viewmodel.AuthViewModel
 
 @Composable
 fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = viewModel()) {
-
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var url by remember {mutableStateOf("http://192.168.1.249:8069/")}
+    var visible by remember {mutableStateOf(false)}
 
     // 1. ESCUCHADOR DE NAVEGACIÓN: Reacciona cuando authViewModel.uid cambia
     LaunchedEffect(authViewModel.uid) {
@@ -72,12 +73,11 @@ fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = vi
         // 2. BOTÓN DE LOGIN
         Button(
             onClick = {
-                errorMessage = null // Limpiamos errores previos
-                authViewModel.fetchUser("prueba" , email , password)
-                // IMPORTANTE: Aquí NO ponemos navController.navigate
+                errorMessage = null
+                authViewModel.fetchUser(url,"prueba" , email , password)
             } ,
             modifier = Modifier.fillMaxWidth() ,
-            enabled = !authViewModel.isLoading // Bloquea el botón si está cargando
+            enabled = !authViewModel.isLoading
         ) {
             if (authViewModel.isLoading) {
                 CircularProgressIndicator(size = 20.dp , color = Color.White)
@@ -98,13 +98,6 @@ fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = vi
         ) {
             Text("Acceder como invitado")
         }
-// Campo de texto con la ip para poder modificarla
-        var texto by remember {
-            mutableStateOf("http://192.168.1.249:8069/")
-        }
-        var visible by remember {
-            mutableStateOf(false)
-        }
 
         if (visible) {
             Button(onClick = { visible = false }) {
@@ -112,15 +105,10 @@ fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = vi
             }
 
             OutlinedTextField(
-                value = texto ,
-                onValueChange = { texto = it } ,
-                label = { Text("Escribe algo") }
+                value = url ,
+                onValueChange = { url = it } ,
+                label = { Text("Escribe aqui la url") }
             )
-            Button(onClick = {
-              //  RetrofitClient.setBaseUrl(texto)
-            }) {
-                Text("Guardar IP")
-            }
         } else {
             Button(onClick = {
                 visible = true

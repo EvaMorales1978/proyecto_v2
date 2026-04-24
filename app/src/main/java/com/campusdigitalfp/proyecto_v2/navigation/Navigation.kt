@@ -16,9 +16,9 @@ import com.campusdigitalfp.proyecto_v2.ui.viewmodel.MainViewModelFactory
 
 
 @Composable
-fun Navigation(odooClient: OdooClient) {
+fun Navigation() {
     val navController = rememberNavController()
-    val repository = OdooRepository(odooClient)
+    //val repository = OdooRepository(odooClient)
     NavHost(navController = navController, startDestination = "login") {
         composable("login") { LoginScreen(navController ) }
         composable(
@@ -28,17 +28,17 @@ fun Navigation(odooClient: OdooClient) {
             // Extraemos el uid de la ruta
             val uid = backStackEntry.arguments?.getInt("uid") ?: 0
 
-            val repository = OdooRepository(odooClient)
+           // val repository = OdooRepository(odooClient)
 
-            val viewModel: MainViewModel = viewModel(
+         /*   val viewModel: MainViewModel = viewModel(
                 factory = MainViewModelFactory(repository, uid)
-            )
+            )*/
 
             // SOLUCIÓN: Pasamos los 3 parámetros exactos
             MainScreen(
-                viewModel = viewModel,
-                navController = navController,
-                uid = uid // <--- Faltaba pasar este tercer parámetro aquí
+               // viewModel = viewModel,
+                navController = navController
+                ,uid = uid // <--- Faltaba pasar este tercer parámetro aquí
             )
         }
     //    composable("about") { AboutScreen(navController) }

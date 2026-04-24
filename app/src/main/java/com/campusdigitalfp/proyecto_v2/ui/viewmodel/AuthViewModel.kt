@@ -6,9 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.campusdigitalfp.proyecto_v2.data.network.OdooClient
 import kotlinx.coroutines.launch
 
-class AuthViewModel : ViewModel() {
-    // Usamos el cliente directamente o un repositorio de auth
-    private val client = OdooClient("http://192.168.1.249:8069")
+class AuthViewModel() : ViewModel() {
 
     var uid by mutableStateOf<Int?>(null)
         private set
@@ -16,14 +14,16 @@ class AuthViewModel : ViewModel() {
     var isLoading by mutableStateOf(false)
         private set
 
-    fun fetchUser(db: String, user: String, pass: String) {
+    fun fetchUser(url: String,db: String, user: String, pass: String) {
         viewModelScope.launch {
             isLoading = true
             try {
+                val client = OdooClient(url)
                 val result = client.authenticate(db, user, pass)
-                uid = result // Si falla, suele devolver 0 o lanzar excepción
+
+                uid = result
             } catch (e: Exception) {
-                uid = 0 // Marcamos error
+                uid = 0
             } finally {
                 isLoading = false
             }

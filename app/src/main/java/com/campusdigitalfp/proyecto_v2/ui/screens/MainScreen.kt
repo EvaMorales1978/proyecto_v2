@@ -22,7 +22,7 @@ import com.campusdigitalfp.proyecto_v2.ui.viewmodel.MainViewModel
 
 
 @Composable
-fun MainScreen(viewModel: MainViewModel , navController: NavController , uid: Int) {
+fun MainScreen( navController: NavController , uid: Int) {
     var usuarioRegistrado by remember { mutableStateOf(false) }
 
     Scaffold(
