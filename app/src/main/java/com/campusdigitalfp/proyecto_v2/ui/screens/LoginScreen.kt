@@ -1,5 +1,6 @@
 package com.campusdigitalfp.proyecto.screens
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -28,12 +29,13 @@ fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = vi
     LaunchedEffect(authViewModel.uid) {
         authViewModel.uid?.let { id ->
             if (id > 0) {
-                Log.d("LOGIN_SUCCESS" , "Navegando con UID: $id")
-                navController.navigate("main/$id") {
-                    popUpTo("login") { inclusive = true } // Evita volver atrás al login
+                // Codificamos la URL para que los "/" no rompan la navegación
+                val encodedUrl = Uri.encode(url)
+
+                Log.d("LOGIN_SUCCESS", "Navegando con UID: $id")
+                navController.navigate("main/$encodedUrl/$id/$password") {
+                    popUpTo("login") { inclusive = true }
                 }
-            } else if (id == 0) {
-                errorMessage = "Credenciales incorrectas"
             }
         }
     }

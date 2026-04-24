@@ -22,8 +22,7 @@ import com.campusdigitalfp.proyecto_v2.ui.viewmodel.MainViewModel
 
 
 @Composable
-fun MainScreen( navController: NavController , uid: Int) {
-    var usuarioRegistrado by remember { mutableStateOf(false) }
+fun MainScreen( navController: NavController ,url:String, uid: Int,pass:String) {
 
     Scaffold(
         topBar = {

@@ -1,5 +1,6 @@
 package com.campusdigitalfp.proyecto.navigation
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -18,28 +19,23 @@ import com.campusdigitalfp.proyecto_v2.ui.viewmodel.MainViewModelFactory
 @Composable
 fun Navigation() {
     val navController = rememberNavController()
-    //val repository = OdooRepository(odooClient)
     NavHost(navController = navController, startDestination = "login") {
         composable("login") { LoginScreen(navController ) }
         composable(
-            route = "main/{uid}",
-            arguments = listOf(navArgument("uid") { type = NavType.IntType })
-        ) { backStackEntry ->
-            // Extraemos el uid de la ruta
-            val uid = backStackEntry.arguments?.getInt("uid") ?: 0
-
-           // val repository = OdooRepository(odooClient)
-
-         /*   val viewModel: MainViewModel = viewModel(
-                factory = MainViewModelFactory(repository, uid)
-            )*/
-
-            // SOLUCIÓN: Pasamos los 3 parámetros exactos
-            MainScreen(
-               // viewModel = viewModel,
-                navController = navController
-                ,uid = uid // <--- Faltaba pasar este tercer parámetro aquí
+            route = "main/{url}/{id}/{password}",
+            arguments = listOf(
+                navArgument("url") { type = NavType.StringType },
+                navArgument("id") { type = NavType.IntType },
+                navArgument("password") { type = NavType.StringType }
             )
+        ) { backStackEntry ->
+            val encodedUrl = backStackEntry.arguments?.getString("url") ?: ""
+            val urlOriginal = Uri.decode(encodedUrl)
+
+            val id = backStackEntry.arguments?.getInt("id") ?: 0
+            val pass = backStackEntry.arguments?.getString("password") ?: ""
+
+            MainScreen(navController, urlOriginal, id, pass)
         }
     //    composable("about") { AboutScreen(navController) }
     //    composable("product") { ListaProductosScreen(navController) }
