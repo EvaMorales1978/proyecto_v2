@@ -12,6 +12,7 @@ import com.campusdigitalfp.proyecto.screens.LoginScreen
 import com.campusdigitalfp.proyecto.screens.MainScreen
 import com.campusdigitalfp.proyecto_v2.data.network.OdooClient
 import com.campusdigitalfp.proyecto_v2.data.repository.OdooRepository
+import com.campusdigitalfp.proyecto_v2.ui.screens.AboutScreen
 import com.campusdigitalfp.proyecto_v2.ui.screens.ScanerScreenOrigen
 import com.campusdigitalfp.proyecto_v2.ui.viewmodel.MainViewModel
 import com.campusdigitalfp.proyecto_v2.ui.viewmodel.MainViewModelFactory
@@ -55,11 +56,7 @@ fun Navigation() {
             ScanerScreenOrigen(navController, urlOriginal, id, pass)
         }
 
-
-       // composable("scanerorigen") { ScanerScreenOrigen(navController) }
-
-
-    //    composable("about") { AboutScreen(navController) }
+        composable("about") { AboutScreen(navController) }
     //    composable("product") { ListaProductosScreen(navController) }
 
     //    composable("delivery") { PickingListScreen(navController) }
