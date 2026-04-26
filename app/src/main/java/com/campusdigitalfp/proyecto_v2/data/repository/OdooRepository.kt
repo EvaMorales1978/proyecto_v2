@@ -7,7 +7,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.*
 
 class OdooRepository(private val client: OdooClient) {
-
+/*
     private val db = "prueba"
     private val user = "eva@eva.com"
     private val pass = "111111"
@@ -130,5 +130,5 @@ class OdooRepository(private val client: OdooClient) {
                 )
             }
         )
-    }
+    }*/
 }

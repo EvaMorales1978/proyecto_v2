@@ -12,7 +12,7 @@ class MainViewModel(
     private val repository: OdooRepository,
     val uid: Int
 ) : ViewModel() {
-
+/*
     var uiState by mutableStateOf<MainUiState>(MainUiState.Loading)
         private set
 
@@ -29,7 +29,7 @@ class MainViewModel(
                 uiState = MainUiState.Error(e.message ?: "Error desconocido")
             }
         }
-    }
+    }*/
 }
 
 sealed class MainUiState {

@@ -32,7 +32,7 @@ data class StockMoveLine(
 data class StockPicking(
     val id: Int ,
     val name: String ,
-    val partner_id: Int ,
+    val partner_id: ResPartner? ,
     val state: String ,
-    val move_line_ids: StockMoveLine
+    val move_line_ids: List<StockMoveLine>
 )

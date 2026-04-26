@@ -82,8 +82,10 @@ fun MainScreen( navController: NavController ,url:String, uid: Int,pass:String) 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
-                    onClick = { navController.navigate("delivery") } ,
-                    colors = ButtonDefaults.buttonColors(
+                    onClick = {
+                        val encodedUrl = Uri.encode(url)
+                        navController.navigate("delivery/$encodedUrl/$uid/$pass")
+                    } ,                    colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary
                     ) ,
                     modifier = Modifier
