@@ -1,6 +1,5 @@
 package com.campusdigitalfp.proyecto_v2.data.repository
 
-
 import android.util.Log
 import com.campusdigitalfp.proyecto_v2.data.network.OdooClient
 import com.campusdigitalfp.proyecto_v2.domain.model.Product
@@ -8,6 +7,8 @@ import com.campusdigitalfp.proyecto_v2.domain.model.ResPartner
 import com.campusdigitalfp.proyecto_v2.domain.model.StockMoveLine
 import com.campusdigitalfp.proyecto_v2.domain.model.StockPicking
 import kotlinx.coroutines.delay
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import java.io.EOFException
@@ -17,20 +18,25 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+class OdooRepositoryPicking {
 
-class OdooRepositoryPicking{
-    //private val api = RetrofitClient.instance
-    suspend fun getPickings(url: String,db: String, uid: Int, pass: String): List<StockPicking> {
+    fun Any?.toIntSafe(): Int = when (this) {
+        is Number -> this.toInt()
+        is String -> this.toIntOrNull() ?: 0
+        is JsonPrimitive -> this.content.toIntOrNull() ?: 0
+        else -> 0
+    }
+
+    fun Any?.toStringSafe(): String = when (this) {
+        is JsonPrimitive -> this.content
+        else -> this?.toString() ?: ""
+    }
+
+    suspend fun getPickings(url: String, db: String, uid: Int, pass: String): List<StockPicking> {
         val client = OdooClient(url)
-        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
 
-        /*val pickingDomain = listOf(
-            "|",
-            listOf("state", "=", "assigned"),
-            listOf("date_done", ">=", "$today 00:00:00")
-        )*/
         val pickingDomain = buildJsonArray {
-            add(buildJsonArray { // <--- Este es el corchete extra que descubrimos en Postman
+            add(buildJsonArray {
                 add(buildJsonArray {
                     add("state")
                     add("=")
@@ -43,80 +49,93 @@ class OdooRepositoryPicking{
                 })
             })
         }
-        //val pickingFields = listOf("id", "name", "partner_id","state")
+
         var retryCount = 0
         val maxRetries = 3
 
         while (retryCount < maxRetries) {
             try {
-              /*  val pickingArgs = mapOf("fields" to pickingFields, "limit" to 20)
-                val finalArgs = listOf(db, uid, pass, "stock.picking", "search_read", listOf(pickingDomain), pickingArgs)
-                val request = OdooRequest(params = mapOf("service" to "object", "method" to "execute_kw", "args" to finalArgs))
-
-                val response = api.callRpc(request)
-                if (response.error != null) return emptyList()
-
-                val resultList = response.result as? List<*> ?: return emptyList()
-                if (resultList.isEmpty()) return emptyList()
-               */
                 val allPickings = mutableListOf<StockPicking>()
                 val pickingsDef = client.searchRead(
-                        db ,
-                        uid ,
-                        pass ,
-                        "stock.picking" ,
-                        listOf("id" , "name" , "partner_id" , "state" , "move_line_ids")
-                        , domain = pickingDomain
-                    )
+                    db, uid, pass,
+                    "stock.picking",
+                    listOf("id", "name", "partner_id", "state", "move_line_ids"),
+                    domain = pickingDomain
+                )
+
+                Log.d("ODOO_FLOW", "pickingsDef size: ${pickingsDef.size}")
+
                 for (item in pickingsDef) {
                     val pickingMap = item as? Map<*, *> ?: continue
-                    val pickingId = (pickingMap["id"] as? Number)?.toInt() ?: 0
+                    Log.d("ODOO_FLOW", "pickingMap keys: ${pickingMap.keys}")
+                    Log.d("ODOO_FLOW", "pickingMap: $pickingMap")
 
-                    val partnerData = pickingMap["partner_id"] as? List<*>
-                    val partnerId = (partnerData?.get(0) as? Number)?.toInt()
+                    val pickingId = pickingMap["id"].toIntSafe()
+                    Log.d("ODOO_FLOW", "pickingId: $pickingId")
+
+                    val rawPartner = pickingMap["partner_id"]
+                    val partnerId = when (rawPartner) {
+                        is JsonArray -> rawPartner[0].toIntSafe()
+                        is List<*> -> rawPartner[0].toIntSafe()
+                        else -> null
+                    }
+                    Log.d("ODOO_FLOW", "partnerId: $partnerId")
+
                     var fullPartner: ResPartner? = null
 
-                    if (partnerId != null) {
+                    if (partnerId != null && partnerId != 0) {
+                        var pRetry = 0
+                        var pSuccess = false
 
-                        var retryCount = 0
-                        val maxRetries = 5
-                        var success = false
-
-                        while (retryCount < maxRetries && !success) {
+                        while (pRetry < 5 && !pSuccess) {
                             try {
+                                val partnerDomain = buildJsonArray {
+                                    add(buildJsonArray {
+                                        add(buildJsonArray {
+                                            add("id")
+                                            add("=")
+                                            add(partnerId)
+                                        })
+                                    })
+                                }
+                                Log.d("ODOO_FLOW", "partnerDomain: $partnerDomain") // debe imprimir [[\"id\",\"=\",3]]
+
                                 val partnersDef = client.searchRead(
-                                        db ,
-                                        uid ,
-                                        pass ,
-                                        "res.partner" ,
-                                        listOf("id" , "name" , "street" , "city")
-                                    )
+                                    db, uid, pass,
+                                    "res.partner",
+                                    listOf("id", "name", "street", "city"),
+                                    domain = partnerDomain
+                                )
+                                Log.d("ODOO_FLOW", "partnersDef size: ${partnersDef?.size}")
 
                                 val pMap = partnersDef?.getOrNull(0) as? Map<*, *>
+                                Log.d("ODOO_FLOW", "pMap: $pMap")
+
                                 if (pMap != null) {
                                     fullPartner = ResPartner(
-                                        id = (pMap["id"] as? Number)?.toInt() ?: 0,
-                                        name = pMap["name"]?.toString() ?: "",
-                                        street = pMap["street"]?.toString() ?: "",
-                                        city = pMap["city"]?.toString() ?: ""
+                                        id = pMap["id"].toIntSafe(),
+                                        name = pMap["name"].toStringSafe(),
+                                        street = pMap["street"].toStringSafe(),
+                                        city = pMap["city"].toStringSafe()
                                     )
-                                    success = true
+                                    Log.d("ODOO_FLOW", "fullPartner: $fullPartner")
+                                } else {
+                                    Log.w("ODOO_FLOW", "Partner $partnerId no encontrado, continuando sin partner")
                                 }
+                                pSuccess = true // ✅ Salir siempre, encuentre o no el partner
 
                             } catch (e: Exception) {
-
-                                val isNetworkError =
-                                    e is ProtocolException ||
-                                            e is EOFException ||
-                                            e is SocketTimeoutException ||
-                                            e.cause is ProtocolException
-
+                                val isNetworkError = e is ProtocolException ||
+                                        e is EOFException ||
+                                        e is SocketTimeoutException ||
+                                        e.cause is ProtocolException
                                 if (isNetworkError) {
-                                    retryCount++
-                                    Log.e("ODOO", "Retry $retryCount (${pickingMap["name"]}) - ${e.message}")
+                                    pRetry++
+                                    Log.e("ODOO_FLOW", "Retry partner $pRetry - ${e.message}")
                                     delay(1000)
                                 } else {
-                                    Log.e("ODOO", "Error NO recuperable (${pickingMap["name"]})", e)
+                                    Log.e("ODOO_FLOW", "Error partner no recuperable", e)
+                                    pSuccess = true // ✅ También salir en error no recuperable
                                     break
                                 }
                             }
@@ -124,104 +143,99 @@ class OdooRepositoryPicking{
                     }
 
                     val movelineList = mutableListOf<StockMoveLine>()
+                    var mRetry = 0
+                    var mSuccess = false
 
-                    var retryCount = 0
-                    val maxRetries = 5
-                    var success = false
-
-                    while (retryCount < maxRetries && !success) {
+                    while (mRetry < 5 && !mSuccess) {
                         try {
                             val moveDomain = buildJsonArray {
                                 add(buildJsonArray {
-                                    add("picking_id")
-                                    add("=")
-                                    add(pickingId)
+                                    add(buildJsonArray {
+                                        add("picking_id")
+                                        add("=")
+                                        add(pickingId)
+                                    })
                                 })
                             }
                             val linesDef = client.searchRead(
-                                db ,
-                                uid ,
-                                pass ,
-                                "stock.move.line" ,
-                                listOf("id" , "product_id" , "reserved_qty" , "qty_done" , "lot_name" , "state"),
+                                db, uid, pass,
+                                "stock.move.line",
+                                listOf("id", "product_id", "reserved_qty", "qty_done", "lot_name", "state"),
                                 domain = moveDomain
                             )
-                           /* val mArgs = listOf(
-                                db, uid, pass,
-                                "stock.move.line", "search_read",
-                                listOf(listOf(listOf("picking_id", "=", pickingId))),
-                                mapOf("fields" to listOf("id", "product_id", "reserved_qty", "qty_done","lot_name","state"))
-                            )
-
-                            val mRes = api.callRpc(
-                                OdooRequest(params = mapOf(
-                                    "service" to "object",
-                                    "method" to "execute_kw",
-                                    "args" to mArgs
-                                ))
-                            ).result as? List<*>*/
+                            Log.d("ODOO_FLOW", "linesDef size: ${linesDef?.size} for pickingId: $pickingId")
 
                             movelineList.clear()
 
                             linesDef?.forEach { moveObj ->
                                 val mMap = moveObj as? Map<*, *> ?: return@forEach
 
-                                val pData = mMap["product_id"] as? List<*>
+                                val pData = mMap["product_id"]
                                 val product = Product(
-                                    (pData?.get(0) as? Number)?.toInt() ?: 0,
-                                    pData?.get(1)?.toString() ?: ""
+                                    id = when (pData) {
+                                        is JsonArray -> pData[0].toIntSafe()
+                                        is List<*> -> pData[0].toIntSafe()
+                                        else -> 0
+                                    },
+                                    name = when (pData) {
+                                        is JsonArray -> pData[1].toStringSafe()
+                                        is List<*> -> pData[1].toStringSafe()
+                                        else -> ""
+                                    }
                                 )
 
                                 movelineList.add(
                                     StockMoveLine(
-                                        id = (mMap["id"] as? Number)?.toInt() ?: 0,
+                                        id = mMap["id"].toIntSafe(),
                                         product_id = product,
-                                        reserved_qty = (mMap["reserved_qty"] as? Number)?.toInt() ?: 0,
-                                        qty_done = (mMap["qty_done"] as? Number)?.toInt() ?: 0,
-                                        state = (mMap["state"] as? String)?:"",
-                                        lot_name = "",
+                                        reserved_qty = mMap["reserved_qty"].toIntSafe(),
+                                        qty_done = mMap["qty_done"].toIntSafe(),
+                                        state = mMap["state"].toStringSafe(),
+                                        lot_name = ""
                                     )
                                 )
                             }
 
-                            success = true
+                            mSuccess = true
 
                         } catch (e: Exception) {
-
-                            val isNetworkError =
-                                e is ProtocolException ||
-                                        e is EOFException ||
-                                        e is SocketTimeoutException ||
-                                        e.cause is ProtocolException
-
+                            val isNetworkError = e is ProtocolException ||
+                                    e is EOFException ||
+                                    e is SocketTimeoutException ||
+                                    e.cause is ProtocolException
                             if (isNetworkError) {
-                                retryCount++
-                                Log.e("ODOO", "Retry MOVES $retryCount ($pickingId) - ${e.message}")
+                                mRetry++
+                                Log.e("ODOO_FLOW", "Retry moves $mRetry ($pickingId) - ${e.message}")
                                 delay(1000)
                             } else {
-                                Log.e("ODOO", "Error MOVES NO recuperable ($pickingId)", e)
+                                Log.e("ODOO_FLOW", "Error moves no recuperable ($pickingId)", e)
                                 break
                             }
                         }
                     }
 
-                    allPickings.add(StockPicking(
-                        id = pickingId ,
-                        name = pickingMap["name"]?.toString() ?: "" ,
-                        partner_id = fullPartner ,
-                        state = pickingMap["state"]?.toString() ?: "" ,
-                        move_line_ids = movelineList
-                    ))
+                    allPickings.add(
+                        StockPicking(
+                            id = pickingId,
+                            name = pickingMap["name"].toStringSafe(),
+                            partner_id = fullPartner,
+                            state = pickingMap["state"].toStringSafe(),
+                            move_line_ids = movelineList
+                        )
+                    )
+                    Log.d("ODOO_FLOW", "allPickings size ahora: ${allPickings.size}")
                 }
 
+                Log.d("ODOO_FLOW", "return allPickings size: ${allPickings.size}")
                 return allPickings
 
             } catch (e: Exception) {
+                Log.e("ODOO_FLOW", "Error general retry $retryCount: ${e.message}", e)
                 retryCount++
                 delay(1000)
             }
         }
+        Log.e("ODOO_FLOW", "Se agotaron los reintentos, devolviendo lista vacía")
         return emptyList()
     }
-
 }

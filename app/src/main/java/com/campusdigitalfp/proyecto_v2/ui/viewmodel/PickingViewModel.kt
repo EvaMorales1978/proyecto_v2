@@ -23,15 +23,7 @@ class PickingViewModel : ViewModel() {
     fun fetchPickings(url: String,db: String, uid: Int, pass: String) {
         viewModelScope.launch {
             isLoading = true
-          //  Log.d("ODOO_CHECK", "Iniciando fetchPickings...")
             try {
-               /* val db = "prueba"
-                val user = "1@1.com"
-                val pass = "a84f30f6c6ac1d44e3f29fc18b4f31b3c78a83ca"
-
-                Log.d("ODOO_CHECK", "Intentando autenticar en $db con usuario $user")
-                val uid = repository.authenticate(db, user, pass)*/
-
                 if (uid != null && uid > 0) {
                     Log.d("ODOO_CHECK", "Autenticación exitosa. UID: $uid")
                     val result = repositoryPicking.getPickings(url , db, uid, pass)

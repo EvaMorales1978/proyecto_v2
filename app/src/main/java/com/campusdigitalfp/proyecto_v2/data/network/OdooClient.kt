@@ -1,5 +1,6 @@
 package com.campusdigitalfp.proyecto_v2.data.network
 
+import android.util.Log
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -69,6 +70,7 @@ class OdooClient(private val baseUrl: String) {
             setBody(buildJsonObject {
                 put("jsonrpc", "2.0")
                 put("method", "call")
+                put("id", 2)
                 put("params", buildJsonObject {
                     put("service", "object")
                     put("method", "execute_kw")
@@ -78,16 +80,15 @@ class OdooClient(private val baseUrl: String) {
                         add(pass)
                         add(model)
                         add("search_read")
-                        add(domain) // Posición 6: El dominio (filtro)
-                    })
-                    // Los campos opcionales van aquí
-                    put("kwargs", buildJsonObject {
-                        put("fields", buildJsonArray {
-                            fields.forEach { add(it) }
+                        add(domain)
+                        add(buildJsonObject {
+                            put("fields", buildJsonArray {
+                                fields.forEach { add(it) }
+                            })
+                            put("limit", 100)
                         })
                     })
                 })
-                put("id", 2)
             })
         }
         val responseText = response.bodyAsText()
