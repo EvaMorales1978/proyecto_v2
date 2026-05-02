@@ -166,6 +166,11 @@ fun MoveItem(
     val scope = rememberCoroutineScope()
     val isCompleted = picking.move_line_ids.isNotEmpty() &&
             picking.move_line_ids.all { it.qty_done == it.reserved_qty }
+    val cardColor = when (picking.state) {
+        "assigned" -> Color(0xFFFFF3CD) // amarillo suave
+        "done"     -> Color(0xFFD4EDDA) // verde suave
+        else       -> Color.White
+    }
 
     if (expanded) {
         ContinuousScanner(
@@ -201,7 +206,7 @@ fun MoveItem(
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.weight(1f).background(cardColor, shape = RoundedCornerShape(8.dp))) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
