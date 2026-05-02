@@ -27,7 +27,6 @@ import com.campusdigitalfp.proyecto_v2.ui.viewmodel.PickingViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private const val DB = "prueba"
 
 @Composable
 fun PickingListScreen(
@@ -40,7 +39,7 @@ fun PickingListScreen(
     var scannedLot by remember { mutableStateOf<String?>(null) }
     var expandedPickingId by remember { mutableStateOf<Int?>(null) }
     var mostrarSoloPendientes by remember { mutableStateOf(false) }
-
+    val db = "prueba"
 
     val snackbarHostState = remember { SnackbarHostState() }
 
