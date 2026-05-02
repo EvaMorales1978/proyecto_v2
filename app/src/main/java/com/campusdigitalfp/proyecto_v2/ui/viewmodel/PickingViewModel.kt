@@ -20,8 +20,12 @@ class PickingViewModel : ViewModel() {
 
     var pickings by mutableStateOf<List<StockPicking>>(emptyList())
     var isLoading by mutableStateOf(false)
+
     var moveLineError by mutableStateOf<String?>(null)
     var moveLineResult by mutableStateOf<Map<String, Any>?>(null)
+
+    var validateSuccess by mutableStateOf<Boolean?>(null)
+    var validateError by mutableStateOf<String?>(null)
 
     fun fetchPickings(url: String,db: String, uid: Int, pass: String) {
         viewModelScope.launch {
@@ -70,7 +74,30 @@ class PickingViewModel : ViewModel() {
         }
     }
 
-
+    fun validatePicking(
+        url: String,
+        db: String,
+        uid: Int,
+        pass: String,
+        pickingId: Int
+    ) {
+        viewModelScope.launch {
+            isLoading = true
+            validateSuccess = null
+            validateError = null
+            try {
+                repositoryPicking.buttonValidate(url, db, uid, pass, pickingId)
+                validateSuccess = true
+                fetchPickings(url, db, uid, pass)
+            } catch (e: IllegalArgumentException) {
+                validateError = e.message
+            } catch (e: Exception) {
+                validateError = "Error al validar: ${e.message}"
+            } finally {
+                isLoading = false
+            }
+        }
+    }
 
 
 }

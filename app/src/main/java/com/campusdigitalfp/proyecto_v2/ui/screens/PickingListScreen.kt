@@ -29,45 +29,52 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun PickingListScreen(
-    navController: NavController ,
-    url: String ,
-    uid: Int ,
-    pass: String ,
+    navController: NavController,
+    url: String,
+    uid: Int,
+    pass: String,
     viewModel: PickingViewModel = viewModel()
 ) {
-
-    var scannedLot by remember { mutableStateOf<String?>(null) }  // ← estado subido aquí
+    var scannedLot by remember { mutableStateOf<String?>(null) }
     var expandedPickingId by remember { mutableStateOf<Int?>(null) }
     var mostrarSoloPendientes by remember { mutableStateOf(false) }
+    val db = "prueba"
 
-    LaunchedEffect(Unit) { viewModel.fetchPickings(url , "prueba" , uid , pass) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
+    LaunchedEffect(Unit) { viewModel.fetchPickings(url, db, uid, pass) }
 
     LaunchedEffect(scannedLot) {
         scannedLot?.let { lot ->
             val pickingId = expandedPickingId ?: return@let
-            viewModel.processScannedLot(url, "prueba", uid, pass, pickingId, lot)
+            viewModel.processScannedLot(url, db, uid, pass, pickingId, lot)
             scannedLot = null
         }
     }
 
-    viewModel.moveLineError?.let { error ->
-        Text(
-            text = error ,
-            color = MaterialTheme.colorScheme.error
-        )
+    LaunchedEffect(viewModel.validateSuccess) {
+        if (viewModel.validateSuccess == true) {
+            snackbarHostState.showSnackbar("Picking validado correctamente")
+            viewModel.validateSuccess = null
+        }
     }
 
+    LaunchedEffect(viewModel.validateError) {
+        viewModel.validateError?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.validateError = null
+        }
+    }
 
     val listaFiltrada = if (mostrarSoloPendientes) {
         viewModel.pickings.filter { it.state == "assigned" }
     } else {
         viewModel.pickings
     }
+
     Scaffold(
-        topBar = {
-            MainTopBarTexto("Entregas")
-        }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = { MainTopBarTexto("Entregas") }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -75,25 +82,23 @@ fun PickingListScreen(
                 .padding(innerPadding)
         ) {
             Surface(
-                shadowElevation = 4.dp ,
+                shadowElevation = 4.dp,
                 color = MaterialTheme.colorScheme.surface
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Spacer(modifier = Modifier.height(16.dp))
-
                     Row(
-                        modifier = Modifier.fillMaxWidth() ,
-                        horizontalArrangement = Arrangement.SpaceBetween ,
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         BotonFiltroSimplePicking(
-                            texto = "Todos" ,
-                            seleccionado = !mostrarSoloPendientes ,
+                            texto = "Todos",
+                            seleccionado = !mostrarSoloPendientes,
                             onClick = { mostrarSoloPendientes = false }
                         )
-
                         BotonFiltroSimplePicking(
-                            texto = "Pendientes" ,
-                            seleccionado = mostrarSoloPendientes ,
+                            texto = "Pendientes",
+                            seleccionado = mostrarSoloPendientes,
                             onClick = { mostrarSoloPendientes = true }
                         )
                     }
@@ -101,58 +106,65 @@ fun PickingListScreen(
             }
 
             LazyColumn(
-                modifier = Modifier.fillMaxSize() ,
-                contentPadding = PaddingValues(16.dp) ,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-
                 items(listaFiltrada) { picking ->
                     MoveItem(
-                        picking = picking ,
-                        expanded = expandedPickingId == picking.id ,
+                        picking = picking,
+                        expanded = expandedPickingId == picking.id,
                         onClick = {
                             expandedPickingId =
                                 if (expandedPickingId == picking.id) null
                                 else picking.id
                         },
-                        onLotScanned = { lot ->
-                            scannedLot = lot
-                        }  // ← callback hacia arriba
-
+                        onLotScanned = { lot -> scannedLot = lot },
+                        onValidate = { pickingId ->
+                            viewModel.validatePicking(url, db, uid, pass, pickingId)
+                        },
+                        isLoading = viewModel.isLoading
                     )
                 }
             }
         }
     }
-
-
 }
 
 @Composable
-fun BotonFiltroSimplePicking(texto: String , seleccionado: Boolean , onClick: () -> Unit) {
+fun BotonFiltroSimplePicking(texto: String, seleccionado: Boolean, onClick: () -> Unit) {
     val fondo = if (seleccionado) MaterialTheme.colorScheme.primary else Color.LightGray
     val textoColor = if (seleccionado) Color.White else Color.Black
 
     Box(
         modifier = Modifier
-            .background(fondo , shape = RoundedCornerShape(16.dp))
+            .background(fondo, shape = RoundedCornerShape(16.dp))
             .clickable(
-                interactionSource = remember { MutableInteractionSource() } ,
-                indication = null ,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
                 onClick = onClick
             )
-            .padding(horizontal = 16.dp , vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Text(text = texto , color = textoColor , style = MaterialTheme.typography.labelLarge)
+        Text(text = texto, color = textoColor, style = MaterialTheme.typography.labelLarge)
     }
 }
 
 @Composable
-fun MoveItem(picking: StockPicking , expanded: Boolean , onClick: () -> Unit, onLotScanned: (String) -> Unit) {
+fun MoveItem(
+    picking: StockPicking,
+    expanded: Boolean,
+    onClick: () -> Unit,
+    onLotScanned: (String) -> Unit,
+    onValidate: (Int) -> Unit,
+    isLoading: Boolean
+) {
     var scannerLocked by remember { mutableStateOf(false) }
-    val tone = ToneGenerator(AudioManager.STREAM_NOTIFICATION , 100)
+    val tone = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 100)
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val isCompleted = picking.move_line_ids.isNotEmpty() &&
+            picking.move_line_ids.all { it.qty_done == it.reserved_qty }
 
     if (expanded) {
         ContinuousScanner(
@@ -161,24 +173,14 @@ fun MoveItem(picking: StockPicking , expanded: Boolean , onClick: () -> Unit, on
                 .height(300.dp)
         ) { contenido ->
             if (scannerLocked) return@ContinuousScanner
-            tone.startTone(
-                ToneGenerator.TONE_PROP_BEEP ,
-                150 // milisegundos
-            )
+            tone.startTone(ToneGenerator.TONE_PROP_BEEP, 150)
             scannerLocked = true
 
-            val productName = contenido.split("-" , limit = 2)[0].trim()
-            val lotName = contenido.split("-" , limit = 2)[1].trim()
+            val lotName = contenido.split("-", limit = 2)[1].trim()
             onLotScanned(lotName)
-            //viewModel.incrementarCantidad(productName)
 
-            Toast.makeText(
-                context ,
-                "Escaneado lote " ,
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(context, "Escaneado lote", Toast.LENGTH_SHORT).show()
 
-            // Reabre el scanner tras 2 segundos, el delay ha de ir dentro d un launch
             scope.launch {
                 delay(2000)
                 scannerLocked = false
@@ -189,57 +191,66 @@ fun MoveItem(picking: StockPicking , expanded: Boolean , onClick: () -> Unit, on
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White , shape = RoundedCornerShape(8.dp))
+            .background(Color.White, shape = RoundedCornerShape(8.dp))
             .clickable(
-                interactionSource = remember { MutableInteractionSource() } ,
-                indication = null ,
-                onClick = {
-                    //verDetalle = ! verDetalle
-                    onClick()
-                }
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
             )
-            .padding(16.dp) ,
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Pedido: ${picking.name}" ,
-                style = MaterialTheme.typography.bodyLarge ,
+                text = "Pedido: ${picking.name}",
+                style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold
             )
             picking.partner_id?.let {
                 Text(
-                    text = it.name + " - " + it.street + " (" + it.city + ")" ,
-                    style = MaterialTheme.typography.bodyMedium ,
+                    text = it.name + " - " + it.street + " (" + it.city + ")",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = Color.Gray
                 )
             }
+
+            if (isCompleted) {
+                Button(
+                    onClick = { onValidate(picking.id) },
+                    enabled = !isLoading
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Validar")
+                    }
+                }
+            }
+
             if (expanded) {
-
                 Spacer(modifier = Modifier.height(8.dp))
-
                 picking.move_line_ids.forEach { line ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp , horizontal = 8.dp) ,
+                            .padding(vertical = 4.dp, horizontal = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = line.product_id.name ,
+                            text = line.product_id.name,
                             style = MaterialTheme.typography.bodySmall
                         )
                         Text(
-                            text = "${line.qty_done} / ${line.reserved_qty}" ,
-                            style = MaterialTheme.typography.bodySmall ,
+                            text = "${line.qty_done} / ${line.reserved_qty}",
+                            style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
-
             }
         }
     }
 }
-
-
