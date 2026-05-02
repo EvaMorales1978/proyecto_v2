@@ -28,52 +28,72 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun PickingListScreen(navController: NavController,url:String, uid: Int,pass:String, viewModel: PickingViewModel = viewModel()) {
-    LaunchedEffect(Unit) { viewModel.fetchPickings(url,"prueba",uid,pass) }
+fun PickingListScreen(
+    navController: NavController ,
+    url: String ,
+    uid: Int ,
+    pass: String ,
+    viewModel: PickingViewModel = viewModel()
+) {
+
+    var scannedLot by remember { mutableStateOf<String?>(null) }  // ← estado subido aquí
     var expandedPickingId by remember { mutableStateOf<Int?>(null) }
     var mostrarSoloPendientes by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) { viewModel.fetchPickings(url , "prueba" , uid , pass) }
+
+
+    LaunchedEffect(scannedLot) {
+        scannedLot?.let { lot ->
+            val pickingId = expandedPickingId ?: return@let
+            viewModel.processScannedLot(url, "prueba", uid, pass, pickingId, lot)
+            scannedLot = null
+        }
+    }
+
+    viewModel.moveLineError?.let { error ->
+        Text(
+            text = error ,
+            color = MaterialTheme.colorScheme.error
+        )
+    }
+
 
     val listaFiltrada = if (mostrarSoloPendientes) {
         viewModel.pickings.filter { it.state == "assigned" }
     } else {
         viewModel.pickings
     }
-    Scaffold (
+    Scaffold(
         topBar = {
             MainTopBarTexto("Entregas")
         }
-    ){ innerPadding->
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
             Surface(
-                shadowElevation = 4.dp,
+                shadowElevation = 4.dp ,
                 color = MaterialTheme.colorScheme.surface
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                   /* Text(
-                        text = "Entregas",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )*/
-
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth() ,
+                        horizontalArrangement = Arrangement.SpaceBetween ,
                     ) {
                         BotonFiltroSimplePicking(
-                            texto = "Todos",
-                            seleccionado = !mostrarSoloPendientes,
+                            texto = "Todos" ,
+                            seleccionado = !mostrarSoloPendientes ,
                             onClick = { mostrarSoloPendientes = false }
                         )
 
                         BotonFiltroSimplePicking(
-                            texto = "Pendientes",
-                            seleccionado = mostrarSoloPendientes,
+                            texto = "Pendientes" ,
+                            seleccionado = mostrarSoloPendientes ,
                             onClick = { mostrarSoloPendientes = true }
                         )
                     }
@@ -81,20 +101,24 @@ fun PickingListScreen(navController: NavController,url:String, uid: Int,pass:Str
             }
 
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
+                modifier = Modifier.fillMaxSize() ,
+                contentPadding = PaddingValues(16.dp) ,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
 
                 items(listaFiltrada) { picking ->
                     MoveItem(
-                        picking = picking,
-                        expanded = expandedPickingId == picking.id,
+                        picking = picking ,
+                        expanded = expandedPickingId == picking.id ,
                         onClick = {
                             expandedPickingId =
                                 if (expandedPickingId == picking.id) null
                                 else picking.id
-                        }
+                        },
+                        onLotScanned = { lot ->
+                            scannedLot = lot
+                        }  // ← callback hacia arriba
+
                     )
                 }
             }
@@ -105,32 +129,32 @@ fun PickingListScreen(navController: NavController,url:String, uid: Int,pass:Str
 }
 
 @Composable
-fun BotonFiltroSimplePicking(texto: String, seleccionado: Boolean, onClick: () -> Unit) {
+fun BotonFiltroSimplePicking(texto: String , seleccionado: Boolean , onClick: () -> Unit) {
     val fondo = if (seleccionado) MaterialTheme.colorScheme.primary else Color.LightGray
     val textoColor = if (seleccionado) Color.White else Color.Black
 
     Box(
         modifier = Modifier
-            .background(fondo, shape = RoundedCornerShape(16.dp))
+            .background(fondo , shape = RoundedCornerShape(16.dp))
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                interactionSource = remember { MutableInteractionSource() } ,
+                indication = null ,
                 onClick = onClick
             )
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp , vertical = 8.dp)
     ) {
-        Text(text = texto, color = textoColor, style = MaterialTheme.typography.labelLarge)
+        Text(text = texto , color = textoColor , style = MaterialTheme.typography.labelLarge)
     }
 }
 
 @Composable
-fun MoveItem(picking: StockPicking , expanded: Boolean , onClick: () -> Unit) {
+fun MoveItem(picking: StockPicking , expanded: Boolean , onClick: () -> Unit, onLotScanned: (String) -> Unit) {
     var scannerLocked by remember { mutableStateOf(false) }
     val tone = ToneGenerator(AudioManager.STREAM_NOTIFICATION , 100)
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    if (expanded ) {
+    if (expanded) {
         ContinuousScanner(
             modifier = Modifier
                 .fillMaxWidth()
@@ -144,8 +168,8 @@ fun MoveItem(picking: StockPicking , expanded: Boolean , onClick: () -> Unit) {
             scannerLocked = true
 
             val productName = contenido.split("-" , limit = 2)[0].trim()
-            val lotName = contenido.split("-" , limit = 2)[0].trim()
-
+            val lotName = contenido.split("-" , limit = 2)[1].trim()
+            onLotScanned(lotName)
             //viewModel.incrementarCantidad(productName)
 
             Toast.makeText(
@@ -165,16 +189,16 @@ fun MoveItem(picking: StockPicking , expanded: Boolean , onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White, shape = RoundedCornerShape(8.dp))
+            .background(Color.White , shape = RoundedCornerShape(8.dp))
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                interactionSource = remember { MutableInteractionSource() } ,
+                indication = null ,
                 onClick = {
                     //verDetalle = ! verDetalle
                     onClick()
                 }
             )
-            .padding(16.dp),
+            .padding(16.dp) ,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
@@ -185,7 +209,7 @@ fun MoveItem(picking: StockPicking , expanded: Boolean , onClick: () -> Unit) {
             )
             picking.partner_id?.let {
                 Text(
-                    text =  it.name + " - "+ it.street + " (" +it.city+")" ,
+                    text = it.name + " - " + it.street + " (" + it.city + ")" ,
                     style = MaterialTheme.typography.bodyMedium ,
                     color = Color.Gray
                 )

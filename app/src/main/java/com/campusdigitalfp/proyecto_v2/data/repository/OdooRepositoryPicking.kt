@@ -8,22 +8,21 @@ import com.campusdigitalfp.proyecto_v2.domain.model.StockMoveLine
 import com.campusdigitalfp.proyecto_v2.domain.model.StockPicking
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import java.io.EOFException
 import java.net.ProtocolException
 import java.net.SocketTimeoutException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+
 
 class OdooRepositoryPicking {
 
     fun Any?.toIntSafe(): Int = when (this) {
-        is Number -> this.toInt()
-        is String -> this.toIntOrNull() ?: 0
-        is JsonPrimitive -> this.content.toIntOrNull() ?: 0
+        is Number      -> this.toInt()
+        is String      -> this.toDoubleOrNull()?.toInt() ?: 0
+        is JsonPrimitive -> this.content.toDoubleOrNull()?.toInt() ?: 0
         else -> 0
     }
 
@@ -238,4 +237,141 @@ class OdooRepositoryPicking {
         Log.e("ODOO_FLOW", "Se agotaron los reintentos, devolviendo lista vacía")
         return emptyList()
     }
+
+    suspend fun UpdateMoveLine(
+        url: String,
+        db: String,
+        uid: Int,
+        pass: String,
+        pickingId: Int,
+        lotName: String
+    ): Map<String, Any> {
+        val client = OdooClient(url)
+
+        val lotDomain = buildJsonArray {
+            add(buildJsonArray {
+                add(buildJsonArray { add("name"); add("="); add(lotName) })
+            })
+        }
+        val lotResult = client.searchRead(
+            db, uid, pass,
+            "stock.lot",
+            listOf("id", "name", "product_id"),
+            domain = lotDomain
+        )
+        val lotMap = lotResult?.getOrNull(0) as? Map<*, *>
+            ?: throw IllegalArgumentException("Lote '$lotName' no encontrado")
+
+        val lotId = lotMap["id"].toIntSafe()
+        val productId = when (val p = lotMap["product_id"]) {
+            is JsonArray -> p[0].toIntSafe()
+            is List<*>   -> p[0].toIntSafe()
+            else -> throw IllegalArgumentException("El lote '$lotName' no tiene producto asociado")
+        }
+
+        val moveDomain = buildJsonArray {
+            add(buildJsonArray {
+                add(buildJsonArray { add("picking_id"); add("="); add(pickingId) })
+                add(buildJsonArray { add("product_id");  add("="); add(productId) })
+            })
+        }
+        val moveResult = client.searchRead(
+            db, uid, pass,
+            "stock.move",
+            listOf("id", "location_id", "location_dest_id", "product_uom"),
+            domain = moveDomain
+        )
+        val moveMap = moveResult?.getOrNull(0) as? Map<*, *>
+            ?: throw IllegalArgumentException("No hay stock.move activo para el producto $productId en el picking $pickingId")
+
+        val moveId = moveMap["id"].toIntSafe()
+        val locationId = when (val l = moveMap["location_id"]) {
+            is JsonArray -> l[0].toIntSafe()
+            is List<*>   -> l[0].toIntSafe()
+            else -> 0
+        }
+        val locationDestId = when (val l = moveMap["location_dest_id"]) {
+            is JsonArray -> l[0].toIntSafe()
+            is List<*>   -> l[0].toIntSafe()
+            else -> 0
+        }
+        val uomId = when (val u = moveMap["product_uom"]) {
+            is JsonArray -> u[0].toIntSafe()
+            is List<*>   -> u[0].toIntSafe()
+            else -> 0
+        }
+
+        val lineDomain = buildJsonArray {
+            add(buildJsonArray {
+                add(buildJsonArray { add("picking_id"); add("="); add(pickingId) })
+                add(buildJsonArray { add("product_id"); add("="); add(productId) })
+                add(buildJsonArray { add("lot_id");     add("="); add(lotId) })
+                add(buildJsonArray {
+                    add("state"); add("not in")
+                    add(buildJsonArray { add("done"); add("cancel") })
+                })
+            })
+        }
+        val existingLines = client.searchRead(
+            db, uid, pass,
+            "stock.move.line",
+            listOf("id", "qty_done","reference"),
+            domain = lineDomain
+        )
+        val existingLine = existingLines?.getOrNull(0) as? Map<*, *>
+
+        return if (existingLine != null) {
+            val lineId     = existingLine["id"].toIntSafe()
+            val currentQty = existingLine["qty_done"].toIntSafe()
+            val newQty     = currentQty + 1.0
+
+            Log.d("ODOO_AUTH", "UID autenticado: $uid")
+
+            val writeResult = client.write(db, uid, pass, "stock.move.line", listOf(lineId), mapOf("qty_done" to newQty))
+            Log.d("ODOO_PICKING", "Write result: $writeResult")
+
+            Log.d("ODOO_PICKING", "Move line $lineId actualizada → qty_done: $newQty")
+            mapOf("action" to "updated", "move_line_id" to lineId, "qty_done" to newQty)
+
+        } else {
+            val newLineId = client.create(
+                db, uid, pass,
+                "stock.move.line",
+                mapOf(
+                    "picking_id"       to pickingId,
+                    "move_id"          to moveId,
+                    "product_id"       to productId,
+                    "lot_id"           to lotId,
+                    "qty_done"         to 1.0,
+                    "reserved_uom_qty" to 0.0,
+                    "product_uom_id"   to uomId,
+                    "location_id"      to locationId,
+                    "location_dest_id" to locationDestId
+                )
+            )
+
+            Log.d("ODOO_PICKING", "Move line creada → id: $newLineId, qty_done: 1.0")
+            mapOf("action" to "created", "move_line_id" to newLineId, "qty_done" to 1.0)
+        }
+    }
+
+
+    suspend fun buttonValidate(
+        url: String,
+        db: String,
+        uid: Int,
+        pass: String,
+        pickingId: Int
+    ): JsonElement {
+        val client = OdooClient(url)
+        val args = buildJsonArray {
+            add(buildJsonArray {
+                add(pickingId)
+            })
+        }
+
+        return client.callKw(db, uid, pass, "stock.picking", "button_validate", args)
+    }
+
+
 }

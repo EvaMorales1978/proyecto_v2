@@ -128,5 +128,76 @@ class OdooClient(private val baseUrl: String) {
         return body["result"] ?: JsonPrimitive("false")
     }
 
+    suspend fun create(
+        db: String,
+        uid: Int,
+        pass: String,
+        model: String,
+        values: Map<String, Any>
+    ): Int {
+        val valuesJson = buildJsonObject {
+            values.forEach { (key, value) ->
+                when (value) {
+                    is Int     -> put(key, value)
+                    is Double  -> put(key, value)
+                    is Boolean -> put(key, value)
+                    is String  -> put(key, value)
+                    else       -> put(key, value.toString())
+                }
+            }
+        }
+
+        val args = buildJsonArray {
+            add(buildJsonArray {
+                add(valuesJson)
+            })
+        }
+
+        val result = callKw(db, uid, pass, model, "create", args)
+
+        return when (result) {
+            is JsonPrimitive -> result.content.toIntOrNull() ?: 0
+            else -> 0
+        }
+    }
+
+    suspend fun write(
+        db: String,
+        uid: Int,
+        pass: String,
+        model: String,
+        ids: List<Int>,
+        values: Map<String, Any>
+    ): Boolean {
+        val idsJson = buildJsonArray {
+            ids.forEach { add(it) }
+        }
+
+        val valuesJson = buildJsonObject {
+            values.forEach { (key, value) ->
+                when (value) {
+                    is Int     -> put(key, value)
+                    is Double  -> put(key, value)
+                    is Boolean -> put(key, value)
+                    is String  -> put(key, value)
+                    else       -> put(key, value.toString())
+                }
+            }
+        }
+
+        val args = buildJsonArray {
+            add(idsJson)    // ✅ [[23], ...]
+            add(valuesJson)
+        }
+
+        val result = callKw(db, uid, pass, model, "write", args)
+
+        return when (result) {
+            is JsonPrimitive -> result.content == "true"
+            else -> false
+        }
+    }
+
+
 
 }
