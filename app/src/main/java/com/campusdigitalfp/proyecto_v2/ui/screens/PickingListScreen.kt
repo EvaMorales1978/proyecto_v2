@@ -27,6 +27,8 @@ import com.campusdigitalfp.proyecto_v2.ui.viewmodel.PickingViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+private const val DB = "prueba"
+
 @Composable
 fun PickingListScreen(
     navController: NavController,
@@ -38,7 +40,7 @@ fun PickingListScreen(
     var scannedLot by remember { mutableStateOf<String?>(null) }
     var expandedPickingId by remember { mutableStateOf<Int?>(null) }
     var mostrarSoloPendientes by remember { mutableStateOf(false) }
-    val db = "prueba"
+
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -201,11 +203,40 @@ fun MoveItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "Pedido: ${picking.name}",
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Pedido: ${picking.name}" ,
+                    style = MaterialTheme.typography.bodyLarge ,
+                    fontWeight = FontWeight.Bold
+                )
+
+
+                if (isCompleted) {
+                    IconButton(
+                        onClick = { onValidate(picking.id) },
+                        enabled = !isLoading
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = "✅",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        }
+                    }
+
+                }
+            }
+
+
             picking.partner_id?.let {
                 Text(
                     text = it.name + " - " + it.street + " (" + it.city + ")",
@@ -213,23 +244,6 @@ fun MoveItem(
                     color = Color.Gray
                 )
             }
-
-            if (isCompleted) {
-                Button(
-                    onClick = { onValidate(picking.id) },
-                    enabled = !isLoading
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text("Validar")
-                    }
-                }
-            }
-
             if (expanded) {
                 Spacer(modifier = Modifier.height(8.dp))
                 picking.move_line_ids.forEach { line ->
