@@ -34,17 +34,32 @@ class OdooRepositoryPicking {
     suspend fun getPickings(url: String, db: String, uid: Int, pass: String): List<StockPicking> {
         val client = OdooClient(url)
 
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+            .format(java.util.Date())
         val pickingDomain = buildJsonArray {
             add(buildJsonArray {
                 add(buildJsonArray {
                     add("state")
-                    add("=")
-                    add("assigned")
+                    add("in")
+                    add(buildJsonArray {
+                        add("assigned")
+                        add("done")
+                    })
                 })
                 add(buildJsonArray {
                     add("picking_type_id")
                     add("=")
                     add(2)
+                })
+                add(buildJsonArray {
+                    add("scheduled_date")
+                    add(">=")
+                    add("$today 00:00:00")
+                })
+                add(buildJsonArray {
+                    add("scheduled_date")
+                    add("<=")
+                    add("$today 23:59:59")
                 })
             })
         }
