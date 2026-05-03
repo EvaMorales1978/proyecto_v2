@@ -46,6 +46,7 @@ fun ProductosListScreen(
     val tone = ToneGenerator(AudioManager.STREAM_NOTIFICATION , 100)
     val context = LocalContext.current
     var scannedLot by remember { mutableStateOf<String?>(null) }
+    var validated by remember { mutableStateOf(false) }
 
 
     LaunchedEffect(Unit) { viewModel.fetchMoves(url , db , uid , pass) }
@@ -131,14 +132,16 @@ fun ProductosListScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (viewModel.allMovesCompleted) {
-                            OutlinedButton(
+                            if (!validated) {
+                                OutlinedButton(
                                 onClick = {
-                                    viewModel.validateAssignedPickings(url, db, uid, pass)
-                                    Toast.makeText(
-                                        context ,
-                                        "Pulsado Check" ,
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                        validated = true  // bloquea inmediatamente
+                                        viewModel.validateAssignedPickings(url, db, uid, pass)
+                                        Toast.makeText(
+                                            context ,
+                                            "Pulsado Check" ,
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                 } ,
                                 modifier = Modifier.wrapContentWidth() ,
                                 shape = MaterialTheme.shapes.medium
@@ -150,6 +153,10 @@ fun ProductosListScreen(
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }
+
+
+                            }
+
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         OutlinedButton(

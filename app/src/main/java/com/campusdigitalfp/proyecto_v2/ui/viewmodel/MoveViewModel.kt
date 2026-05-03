@@ -96,6 +96,7 @@ class MoveViewModel : ViewModel() {
                 validateError = e.message
             } catch (e: Exception) {
                 validateError = "Error al validar: ${e.message}"
+
             } finally {
                 isLoading = false
             }
