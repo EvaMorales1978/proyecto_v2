@@ -260,5 +260,66 @@ class OdooRepositoryMove {
         }
     }
 
+    suspend fun validateAssignedPickings(
+        url: String, db: String, uid: Int, pass: String
+    ) {
+        val client = OdooClient(url)
+
+       /* val pickingDomain = buildJsonArray {
+            add(buildJsonArray {
+                add(buildJsonArray { add("state"); add("="); add("assigned") })
+                add(buildJsonArray { add("picking_type_id"); add("="); add(3) })
+            })
+        }*/
+
+
+
+        val pickingDomain = buildJsonArray {
+            add(buildJsonArray {
+                add(buildJsonArray {
+                    add("state")
+                    add("in")
+                    add(buildJsonArray {
+                        add("assigned")
+                    })
+                })
+                add(buildJsonArray {
+                    add("picking_type_id")
+                    add("=")
+                    add(3)
+                })
+            })
+        }
+
+        val moveResult = client.searchRead(
+            db, uid, pass,
+            "stock.picking",
+            listOf("id"),
+            domain = pickingDomain
+        )
+        Log.d("ODOO_FLOW", "Pickings recibidos: ${moveResult.size}")
+
+        val pickingIds = moveResult
+            ?.mapNotNull { item ->
+                val map = item as? Map<*, *> ?: return@mapNotNull null
+                when (val pk = map["id"]) {
+                    is JsonArray -> pk[0].toIntSafe()
+                    is List<*>   -> pk[0].toIntSafe()
+                    else -> pk.toIntSafe().takeIf { it != 0 }
+                }
+            }
+            ?.distinct()
+            ?: emptyList()
+
+        Log.d("ODOO_FLOW", "Pickings a validar: $pickingIds")
+
+        pickingIds.forEach { id ->
+            val args = buildJsonArray {
+                add(buildJsonArray { add(id) })
+            }
+            client.callKw(db, uid, pass, "stock.picking", "button_validate", args)
+            Log.d("ODOO_FLOW", "Validado picking: $id")
+        }
+    }
 
 }

@@ -133,6 +133,7 @@ fun ProductosListScreen(
                         if (viewModel.allMovesCompleted) {
                             OutlinedButton(
                                 onClick = {
+                                    viewModel.validateAssignedPickings(url, db, uid, pass)
                                     Toast.makeText(
                                         context ,
                                         "Pulsado Check" ,

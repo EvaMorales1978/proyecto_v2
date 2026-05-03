@@ -22,6 +22,9 @@ class MoveViewModel : ViewModel() {
     var isLoading by mutableStateOf(false)
     var allMovesCompleted by mutableStateOf(false)
 
+    var validateSuccess by mutableStateOf<Boolean?>(null)
+    var validateError by mutableStateOf<String?>(null)
+
     private fun updateMoves(newMoves: List<StockMove>) {
         moves = newMoves
         allMovesCompleted = newMoves.isNotEmpty() && newMoves.all { it.product_done == it.product_qty }
@@ -74,6 +77,25 @@ class MoveViewModel : ViewModel() {
                 moveLineError = e.message
             } catch (e: Exception) {
                 moveLineError = "Error de conexión: ${e.message}"
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+
+    fun validateAssignedPickings(url: String, db: String, uid: Int, pass: String) {
+        viewModelScope.launch {
+            isLoading = true
+            validateSuccess = null
+            validateError = null
+            try {
+                repositoryMove.validateAssignedPickings(url, db, uid, pass)
+                validateSuccess = true
+            } catch (e: IllegalArgumentException) {
+                validateError = e.message
+            } catch (e: Exception) {
+                validateError = "Error al validar: ${e.message}"
             } finally {
                 isLoading = false
             }
