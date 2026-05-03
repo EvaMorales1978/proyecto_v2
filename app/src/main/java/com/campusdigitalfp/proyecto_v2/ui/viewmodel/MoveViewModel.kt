@@ -14,6 +14,8 @@ import com.campusdigitalfp.proyecto_v2.domain.model.StockMove
 class MoveViewModel : ViewModel() {
     private val repositoryMove = OdooRepositoryMove()
 
+    var moveLineError by mutableStateOf<String?>(null)
+    var moveLineResult by mutableStateOf<Map<String, Any>?>(null)
 
     var moves by mutableStateOf<List<StockMove>>(emptyList())
 
@@ -37,4 +39,39 @@ class MoveViewModel : ViewModel() {
             }
         }
     }
+
+
+    fun processScannedLotMove(
+        url: String,
+        db: String,
+        uid: Int,
+        pass: String,
+        lotName: String
+    ) {
+        viewModelScope.launch {
+            isLoading = true
+            moveLineError = null
+            try {
+                val result = repositoryMove.UpdateMoveLine(
+                    url, db, uid, pass,
+                    lotName
+                )
+                Log.d("ODOO_CHECK", "Finalizado UpdateMoveLine. Estado de pickings: ${result.size}")
+
+                moveLineResult = result
+                //fetchMoves(url, db, uid, pass)
+
+                val updatedMoves = repositoryMove.getMovesGrouped(url, db, uid, pass)
+                moves = updatedMoves  // ← esto actualiza el State y recompone la pantalla
+
+            } catch (e: IllegalArgumentException) {
+                moveLineError = e.message
+            } catch (e: Exception) {
+                moveLineError = "Error de conexión: ${e.message}"
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
 }

@@ -2,6 +2,7 @@ package com.campusdigitalfp.proyecto_v2.ui.screens
 
 import android.media.AudioManager
 import android.media.ToneGenerator
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -44,10 +45,18 @@ fun ProductosListScreen(
     var scannerLocked by remember { mutableStateOf(false) }
     val tone = ToneGenerator(AudioManager.STREAM_NOTIFICATION , 100)
     val context = LocalContext.current
-    var textoEscaneado by remember { mutableStateOf("Aquí aparecerá el código") }
+    var scannedLot by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) { viewModel.fetchMoves(url, db, uid, pass) }
 
+    LaunchedEffect(scannedLot) {
+        Log.e("ODOO_lauch", "Entra")
+
+        scannedLot?.let { lot ->
+            viewModel.processScannedLotMove(url, db, uid, pass, lot)
+            scannedLot = null
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -72,14 +81,14 @@ fun ProductosListScreen(
                 )
                 scannerLocked = true
 
-                val productName =
-                    contenido.split("-" , limit = 2)[0].trim()
+                val lotName = contenido.split("-", limit = 2)[1].trim()
+                scannedLot = lotName
 
-              //  viewModel.incrementarCantidad(productName)
+                //  viewModel.incrementarCantidad(productName)
 
                 Toast.makeText(
                     context ,
-                    "Sumado: $productName" ,
+                    "Sumado: $lotName" ,
                     Toast.LENGTH_SHORT
                 ).show()
 
