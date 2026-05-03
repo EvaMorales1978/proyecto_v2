@@ -20,6 +20,12 @@ class MoveViewModel : ViewModel() {
     var moves by mutableStateOf<List<StockMove>>(emptyList())
 
     var isLoading by mutableStateOf(false)
+    var allMovesCompleted by mutableStateOf(false)
+
+    private fun updateMoves(newMoves: List<StockMove>) {
+        moves = newMoves
+        allMovesCompleted = newMoves.isNotEmpty() && newMoves.all { it.product_done == it.product_qty }
+    }
 
     fun fetchMoves(url: String,db: String, uid: Int, pass: String) {
         viewModelScope.launch {
@@ -28,7 +34,7 @@ class MoveViewModel : ViewModel() {
             try {
                 val result = repositoryMove.getMovesGrouped(url, db , uid , pass)
                 Log.d("ODOO_CHECK" , "Moves recibidos: ${result.size}")
-                moves = result
+                updateMoves(result)
 
             } catch (e: Exception) {
                 Log.e("ODOO_CHECK" , "Error en la petición: ${e.message}")
@@ -62,7 +68,7 @@ class MoveViewModel : ViewModel() {
                 //fetchMoves(url, db, uid, pass)
 
                 val updatedMoves = repositoryMove.getMovesGrouped(url, db, uid, pass)
-                moves = updatedMoves  // ← esto actualiza el State y recompone la pantalla
+                updateMoves(updatedMoves)  // ← esto actualiza el State y recompone la pantalla
 
             } catch (e: IllegalArgumentException) {
                 moveLineError = e.message

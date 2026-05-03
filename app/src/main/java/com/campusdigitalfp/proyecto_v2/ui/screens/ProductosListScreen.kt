@@ -33,10 +33,10 @@ import com.campusdigitalfp.proyecto_v2.ui.viewmodel.MoveViewModel
 
 @Composable
 fun ProductosListScreen(
-    navController: NavController,
-    url: String,
-    uid: Int,
-    pass: String,
+    navController: NavController ,
+    url: String ,
+    uid: Int ,
+    pass: String ,
     viewModel: MoveViewModel = viewModel()
 ) {
     val db = "prueba"
@@ -47,13 +47,14 @@ fun ProductosListScreen(
     val context = LocalContext.current
     var scannedLot by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(Unit) { viewModel.fetchMoves(url, db, uid, pass) }
+
+    LaunchedEffect(Unit) { viewModel.fetchMoves(url , db , uid , pass) }
 
     LaunchedEffect(scannedLot) {
-        Log.e("ODOO_lauch", "Entra")
+        Log.e("ODOO_lauch" , "Entra")
 
         scannedLot?.let { lot ->
-            viewModel.processScannedLotMove(url, db, uid, pass, lot)
+            viewModel.processScannedLotMove(url , db , uid , pass , lot)
             scannedLot = null
         }
     }
@@ -69,33 +70,35 @@ fun ProductosListScreen(
                 .padding(innerPadding)
         ) {
             // otra pantalla q inserto en esta
-            ContinuousScanner(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp)
-            ) { contenido ->
-                if (scannerLocked) return@ContinuousScanner
-                tone.startTone(
-                    ToneGenerator.TONE_PROP_BEEP ,
-                    150 // milisegundos
-                )
-                scannerLocked = true
+            if (!viewModel.allMovesCompleted) {
+                ContinuousScanner(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp)
+                ) { contenido ->
+                    if (scannerLocked) return@ContinuousScanner
+                    tone.startTone(
+                        ToneGenerator.TONE_PROP_BEEP ,
+                        150 // milisegundos
+                    )
+                    scannerLocked = true
 
-                val lotName = contenido.split("-", limit = 2)[1].trim()
-                scannedLot = lotName
+                    val lotName = contenido.split("-" , limit = 2)[1].trim()
+                    scannedLot = lotName
 
-                //  viewModel.incrementarCantidad(productName)
+                    //  viewModel.incrementarCantidad(productName)
 
-                Toast.makeText(
-                    context ,
-                    "Sumado: $lotName" ,
-                    Toast.LENGTH_SHORT
-                ).show()
+                    Toast.makeText(
+                        context ,
+                        "Sumado: $lotName" ,
+                        Toast.LENGTH_SHORT
+                    ).show()
 
-                // Reabre el scanner tras 2 segundos, el delay ha de ir dentro d un launch
-                scope.launch {
-                    delay(2000)
-                    scannerLocked = false
+                    // Reabre el scanner tras 2 segundos, el delay ha de ir dentro d un launch
+                    scope.launch {
+                        delay(2000)
+                        scannerLocked = false
+                    }
                 }
             }
 
@@ -127,24 +130,25 @@ fun ProductosListScreen(
                         horizontalArrangement = Arrangement.Center ,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-
-                        OutlinedButton(
-                            onClick = {
-                                Toast.makeText(
-                                    context ,
-                                    "Pulsado Check" ,
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            } ,
-                            modifier = Modifier.wrapContentWidth() ,
-                            shape = MaterialTheme.shapes.medium
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Check ,
-                                contentDescription = "Confirmar Escaneo" ,
-                                modifier = Modifier.size(120.dp) ,
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                        if (viewModel.allMovesCompleted) {
+                            OutlinedButton(
+                                onClick = {
+                                    Toast.makeText(
+                                        context ,
+                                        "Pulsado Check" ,
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } ,
+                                modifier = Modifier.wrapContentWidth() ,
+                                shape = MaterialTheme.shapes.medium
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Check ,
+                                    contentDescription = "Confirmar Escaneo" ,
+                                    modifier = Modifier.size(120.dp) ,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         OutlinedButton(
