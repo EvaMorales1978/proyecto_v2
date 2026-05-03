@@ -22,7 +22,7 @@ import com.campusdigitalfp.proyecto_v2.R
 
 
 @Composable
-fun MainScreen( navController: NavController ,url:String, uid: Int,pass:String) {
+fun MainScreen(navController: NavController , url: String , uid: Int , pass: String) {
 
     Scaffold(
         topBar = {
@@ -48,7 +48,7 @@ fun MainScreen( navController: NavController ,url:String, uid: Int,pass:String) 
                 onClick = {
                     val encodedUrl = Uri.encode(url)
                     navController.navigate("scanerorigen/$encodedUrl/$uid/$pass")
-                          } ,
+                } ,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -58,20 +58,24 @@ fun MainScreen( navController: NavController ,url:String, uid: Int,pass:String) 
 
             Spacer(modifier = Modifier.height(16.dp))
 
-           /* Button(
-                onClick = { navController.navigate("login") } ,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ) {
-                Text(stringResource(R.string.iniciar_sesi_n))
-            }
+            /* Button(
+                 onClick = { navController.navigate("login") } ,
+                 modifier = Modifier
+                     .fillMaxWidth()
+                     .height(56.dp)
+             ) {
+                 Text(stringResource(R.string.iniciar_sesi_n))
+             }
 
-            Spacer(modifier = Modifier.height(16.dp))*/
+             Spacer(modifier = Modifier.height(16.dp))*/
 
-            if (uid!=0) {
+            if (uid != 0) {
                 Button(
-                    onClick = { navController.navigate("product") } ,
+                   // onClick = { navController.navigate("product") } ,
+                    onClick = {
+                        val encodedUrl = Uri.encode(url)
+                        navController.navigate("product/$encodedUrl/$uid/$pass")
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
@@ -85,7 +89,8 @@ fun MainScreen( navController: NavController ,url:String, uid: Int,pass:String) 
                     onClick = {
                         val encodedUrl = Uri.encode(url)
                         navController.navigate("delivery/$encodedUrl/$uid/$pass")
-                    } ,                    colors = ButtonDefaults.buttonColors(
+                    } ,
+                    colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary
                     ) ,
                     modifier = Modifier

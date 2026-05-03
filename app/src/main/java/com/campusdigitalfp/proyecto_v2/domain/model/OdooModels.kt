@@ -36,3 +36,13 @@ data class StockPicking(
     val state: String ,
     val move_line_ids: List<StockMoveLine>
 )
+
+data class StockMove(
+    val id: Int ,
+    val name: String ,
+    val product: Product,
+    val product_done: Int ,
+    val product_qty: Int,
+//    var qty_scaneada: Int,
+    val state:String
+)
