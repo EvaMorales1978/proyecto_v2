@@ -243,7 +243,7 @@ fun MoveItem(
 
             picking.partner_id?.let {
                 Text(
-                    text = it.name + " - " + it.street + " (" + it.city + ")",
+                    text = it.sequence_route.toString()+ "-" + it.name + " - " + it.street + " (" + it.city + ")",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Gray
                 )

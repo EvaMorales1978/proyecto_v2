@@ -117,7 +117,7 @@ class OdooRepositoryPicking {
                                 val partnersDef = client.searchRead(
                                     db, uid, pass,
                                     "res.partner",
-                                    listOf("id", "name", "street", "city"),
+                                    listOf("id", "name", "street", "city","sequence_route"),
                                     domain = partnerDomain
                                 )
                                 Log.d("ODOO_FLOW", "partnersDef size: ${partnersDef?.size}")
@@ -130,7 +130,9 @@ class OdooRepositoryPicking {
                                         id = pMap["id"].toIntSafe(),
                                         name = pMap["name"].toStringSafe(),
                                         street = pMap["street"].toStringSafe(),
-                                        city = pMap["city"].toStringSafe()
+                                        city = pMap["city"].toStringSafe(),
+                                        sequence_route = pMap["sequence_route"].toIntSafe(),
+
                                     )
                                     Log.d("ODOO_FLOW", "fullPartner: $fullPartner")
                                 } else {
@@ -242,6 +244,12 @@ class OdooRepositoryPicking {
 
                 Log.d("ODOO_FLOW", "return allPickings size: ${allPickings.size}")
                 return allPickings
+                    .sortedWith(
+                    compareBy(
+                        { it.partner_id == null },
+                        { it.partner_id?.sequence_route ?: Int.MIN_VALUE }
+                    )
+                )
 
             } catch (e: Exception) {
                 Log.e("ODOO_FLOW", "Error general retry $retryCount: ${e.message}", e)

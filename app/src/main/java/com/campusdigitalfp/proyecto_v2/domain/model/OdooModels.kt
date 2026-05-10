@@ -15,7 +15,8 @@ data class ResPartner(
     val id: Int,
     val name: String,
     val street: String?,
-    val city: String?
+    val city: String?,
+    val sequence_route: Int
 )
 data class Product(
     val id: Int,
