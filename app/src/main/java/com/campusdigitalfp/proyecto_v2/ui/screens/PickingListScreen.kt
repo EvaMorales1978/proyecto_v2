@@ -16,7 +16,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -75,22 +74,24 @@ fun PickingListScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = { MainTopBarTexto("Entregas") }
+        topBar = { MainTopBarTexto("Entregas") },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             Surface(
                 shadowElevation = 4.dp,
                 color = MaterialTheme.colorScheme.surface
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         BotonFiltroSimplePicking(
                             texto = "Todos",
@@ -103,6 +104,7 @@ fun PickingListScreen(
                             onClick = { mostrarSoloPendientes = true }
                         )
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
 
@@ -117,8 +119,7 @@ fun PickingListScreen(
                         expanded = expandedPickingId == picking.id,
                         onClick = {
                             expandedPickingId =
-                                if (expandedPickingId == picking.id) null
-                                else picking.id
+                                if (expandedPickingId == picking.id) null else picking.id
                         },
                         onLotScanned = { lot -> scannedLot = lot },
                         onValidate = { pickingId ->
@@ -134,8 +135,10 @@ fun PickingListScreen(
 
 @Composable
 fun BotonFiltroSimplePicking(texto: String, seleccionado: Boolean, onClick: () -> Unit) {
-    val fondo = if (seleccionado) MaterialTheme.colorScheme.primary else Color.LightGray
-    val textoColor = if (seleccionado) Color.White else Color.Black
+    val fondo = if (seleccionado) MaterialTheme.colorScheme.primary
+    else MaterialTheme.colorScheme.surfaceVariant
+    val textoColor = if (seleccionado) MaterialTheme.colorScheme.onPrimary
+    else MaterialTheme.colorScheme.onSurfaceVariant
 
     Box(
         modifier = Modifier
@@ -145,9 +148,14 @@ fun BotonFiltroSimplePicking(texto: String, seleccionado: Boolean, onClick: () -
                 indication = null,
                 onClick = onClick
             )
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 20.dp, vertical = 8.dp)
     ) {
-        Text(text = texto, color = textoColor, style = MaterialTheme.typography.labelLarge)
+        Text(
+            text = texto,
+            color = textoColor,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = if (seleccionado) FontWeight.Bold else FontWeight.Normal
+        )
     }
 }
 
@@ -167,9 +175,19 @@ fun MoveItem(
     val isCompleted = picking.move_line_ids.isNotEmpty() &&
             picking.move_line_ids.all { it.qty_done == it.reserved_qty }
     val cardColor = when (picking.state) {
-        "assigned" -> Color(0xFFFFF3CD) // amarillo suave
-        "done"     -> Color(0xFFD4EDDA) // verde suave
-        else       -> Color.White
+        "assigned" -> MaterialTheme.colorScheme.primaryContainer
+        "done" -> MaterialTheme.colorScheme.secondaryContainer
+        else -> MaterialTheme.colorScheme.surface
+    }
+    val accentColor = when (picking.state) {
+        "assigned" -> MaterialTheme.colorScheme.primary
+        "done" -> MaterialTheme.colorScheme.secondary
+        else -> MaterialTheme.colorScheme.outline
+    }
+    val cardTextColor = when (picking.state) {
+        "assigned" -> MaterialTheme.colorScheme.onPrimaryContainer
+        "done" -> MaterialTheme.colorScheme.onSecondaryContainer
+        else -> MaterialTheme.colorScheme.onSurface
     }
 
     if (expanded) {
@@ -181,12 +199,9 @@ fun MoveItem(
             if (scannerLocked) return@ContinuousScanner
             tone.startTone(ToneGenerator.TONE_PROP_BEEP, 150)
             scannerLocked = true
-
             val lotName = contenido.split("-", limit = 2)[1].trim()
             onLotScanned(lotName)
-
             Toast.makeText(context, "Escaneado lote", Toast.LENGTH_SHORT).show()
-
             scope.launch {
                 delay(2000)
                 scannerLocked = false
@@ -197,27 +212,40 @@ fun MoveItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White, shape = RoundedCornerShape(8.dp))
+            .background(cardColor, shape = RoundedCornerShape(12.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick
             )
-            .padding(16.dp),
+            .padding(start = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1f).background(cardColor, shape = RoundedCornerShape(8.dp))) {
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .fillMaxHeight()
+                .background(accentColor, shape = RoundedCornerShape(4.dp))
+        )
+
+        Spacer(modifier = Modifier.width(10.dp))
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(vertical = 12.dp, horizontal = 8.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Pedido: ${picking.name}" ,
-                    style = MaterialTheme.typography.bodyLarge ,
-                    fontWeight = FontWeight.Bold
+                    text = "Pedido: ${picking.name}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = cardTextColor
                 )
-
 
                 if (isCompleted) {
                     IconButton(
@@ -227,7 +255,8 @@ fun MoveItem(
                         if (isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.primary
                             )
                         } else {
                             Text(
@@ -236,35 +265,43 @@ fun MoveItem(
                             )
                         }
                     }
-
                 }
             }
 
-
             picking.partner_id?.let {
                 Text(
-                    text = it.sequence_route.toString()+ "-" + it.name + " - " + it.street + " (" + it.city + ")",
+                    text = "${it.sequence_route} - ${it.name} - ${it.street} (${it.city})",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+
             if (expanded) {
                 Spacer(modifier = Modifier.height(8.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Spacer(modifier = Modifier.height(6.dp))
+
                 picking.move_line_ids.forEach { line ->
+                    val lineCompleta = line.qty_done == line.reserved_qty
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp, horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(vertical = 3.dp, horizontal = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = line.product_id.name,
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f)
                         )
                         Text(
                             text = "${line.qty_done} / ${line.reserved_qty}",
                             style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = if (lineCompleta) MaterialTheme.colorScheme.tertiary
+                            else MaterialTheme.colorScheme.primary
                         )
                     }
                 }

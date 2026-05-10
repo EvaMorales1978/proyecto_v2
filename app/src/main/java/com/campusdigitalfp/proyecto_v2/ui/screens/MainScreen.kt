@@ -53,25 +53,19 @@ fun MainScreen(navController: NavController , url: String , uid: Int , pass: Str
                     .fillMaxWidth()
                     .height(56.dp)
             ) {
+                Icon(
+                    imageVector = Icons.Default.QrCodeScanner,
+                    contentDescription = null,
+                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                )
+                Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
                 Text(stringResource(R.string.buscar_procedencia))
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            /* Button(
-                 onClick = { navController.navigate("login") } ,
-                 modifier = Modifier
-                     .fillMaxWidth()
-                     .height(56.dp)
-             ) {
-                 Text(stringResource(R.string.iniciar_sesi_n))
-             }
-
-             Spacer(modifier = Modifier.height(16.dp))*/
-
             if (uid != 0) {
                 Button(
-                   // onClick = { navController.navigate("product") } ,
                     onClick = {
                         val encodedUrl = Uri.encode(url)
                         navController.navigate("product/$encodedUrl/$uid/$pass")
@@ -80,7 +74,13 @@ fun MainScreen(navController: NavController , url: String , uid: Int , pass: Str
                         .fillMaxWidth()
                         .height(56.dp)
                 ) {
-                    Text(stringResource(R.string.mercanc_a_necesaria))
+                    Icon(
+                        imageVector = Icons.Default.Badge,
+                        contentDescription = null,
+                        modifier = Modifier.size(ButtonDefaults.IconSize)
+                    )
+                    Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
+                    Text("Mercancía Necesaria")
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -97,6 +97,12 @@ fun MainScreen(navController: NavController , url: String , uid: Int , pass: Str
                         .fillMaxWidth()
                         .height(56.dp)
                 ) {
+                    Icon(
+                        imageVector = Icons.Default.DirectionsCar,
+                        contentDescription = null,
+                        modifier = Modifier.size(ButtonDefaults.IconSize)
+                    )
+                    Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
                     Text(stringResource(R.string.reparto))
                 }
 
@@ -108,6 +114,12 @@ fun MainScreen(navController: NavController , url: String , uid: Int , pass: Str
                     .fillMaxWidth()
                     .height(56.dp)
             ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                )
+                Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
                 Text(stringResource(R.string.acerca_de))
             }
         }
