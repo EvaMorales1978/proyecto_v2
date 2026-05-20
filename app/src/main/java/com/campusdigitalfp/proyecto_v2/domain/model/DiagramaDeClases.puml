@@ -1,0 +1,49 @@
+@startuml
+
+
+class ResPartner {
+    +id: Int
+    +name: String
+    +street: String?
+    +city: String?
+    +sequence_route: Int
+}
+
+class Product {
+    +id: Int
+    +name: String
+}
+
+class StockMoveLine {
+    +id: Int
+    +product_id: Product
+    +reserved_qty: Int
+    +qty_done: Int
+    +lot_name: String
+    +state: String
+}
+
+class StockPicking {
+    +id: Int
+    +name: String
+    +partner_id: ResPartner?
+    +state: String
+    +move_line_ids: List<StockMoveLine>
+}
+
+class StockMove {
+    +id: Int
+    +name: String
+    +product: Product
+    +product_done: Int
+    +product_qty: Int
+    +state: String
+}
+
+
+StockMoveLine "many" --> "1" Product : product_id
+StockPicking "many" --> "0..1" ResPartner : partner_id
+StockPicking "1" *-- "many" StockMoveLine : move_line_ids
+StockMove "many" --> "1" Product : product
+
+@enduml
