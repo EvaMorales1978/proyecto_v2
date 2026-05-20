@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+        <record id="view_street_tree" model="ir.ui.view">
+            <field name="name">res.street.tree</field>
+            <field name="model">res.street</field>
+            <field name="arch" type="xml">
+                <tree string="street" >
+                    <field name="name"/>
+                    <field name="sequence_even"/>
+                    <field name="sequence_odd"/>
+                    <field name="city_id" options="{'no_open': True, 'no_create': True}"/>
+                </tree>
+            </field>
+        </record>
+        <!-- <record id="view_street_filter" model="ir.ui.view">
+            <field name="model">res.street</field>
+            <field name="arch" type="xml">
+                <search string="Search street">
+                    <field name="name" filter_domain="['|', ('name','ilike',self), ('zipcode','ilike',self)]"
+                           string="street"/>
+                    <separator/>
+                    <field name="country_id"/>
+                </search>
+            </field>
+        </record> -->
+
+        <record id="action_res_street_tree" model="ir.actions.act_window">
+            <field name="name">Streets</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">res.street</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help">
+                Display and manage the list of all streets that can be assigned to
+                your partner records. Note that an option can be set on each country separately
+                to enforce any address of it to have a street in this list.
+            </field>
+        </record>
+
+    <menuitem
+        name="Streets"
+        id="locations_menu_streets"
+        parent="contacts.menu_localisation"
+        action="action_res_street_tree"
+        sequence="4"
+    />
+</odoo>
+
+
