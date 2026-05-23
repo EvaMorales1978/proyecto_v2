@@ -2,6 +2,7 @@ package com.campusdigitalfp.proyecto.screens
 
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -9,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -24,19 +26,19 @@ fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = vi
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var url by remember {mutableStateOf("http://192.168.1.243:8069/")}
     var visible by remember {mutableStateOf(false)}
+    val context = LocalContext.current
 
     // 1. ESCUCHADOR DE NAVEGACIÓN: Reacciona cuando authViewModel.uid cambia
     LaunchedEffect(authViewModel.uid) {
         authViewModel.uid?.let { id ->
             if (id > 0) {
-                // Codificamos la URL para que los "/" no rompan la navegación
                 val encodedUrl = Uri.encode(url)
-
                 Log.d("LOGIN_SUCCESS", "Navegando con UID: $id")
                 navController.navigate("main/$encodedUrl/$id/$password") {
                     popUpTo("login") { inclusive = true }
                 }
-            }
+            } else Toast.makeText(context , "Usuario o contraseña incorrectos." , Toast.LENGTH_SHORT).show()
+
         }
     }
 
