@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import com.campusdigitalfp.proyecto_v2.R
 
@@ -51,11 +52,14 @@ fun MainScreen(navController: NavController , url: String , uid: Int , pass: Str
                 } ,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(56.dp) ,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor =Color(0xFFBA7517)
+                ) ,
             ) {
                 Icon(
-                    imageVector = Icons.Default.QrCodeScanner,
-                    contentDescription = null,
+                    imageVector = Icons.Default.QrCodeScanner ,
+                    contentDescription = null ,
                     modifier = Modifier.size(ButtonDefaults.IconSize)
                 )
                 Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
@@ -69,14 +73,17 @@ fun MainScreen(navController: NavController , url: String , uid: Int , pass: Str
                     onClick = {
                         val encodedUrl = Uri.encode(url)
                         navController.navigate("product/$encodedUrl/$uid/$pass")
-                    },
+                    } ,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
+                        .height(56.dp) ,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor =  MaterialTheme.colorScheme.primary //Color(0xFF639922)
+                    ) ,
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Badge,
-                        contentDescription = null,
+                        imageVector = Icons.Default.Badge ,
+                        contentDescription = null ,
                         modifier = Modifier.size(ButtonDefaults.IconSize)
                     )
                     Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
@@ -91,15 +98,15 @@ fun MainScreen(navController: NavController , url: String , uid: Int , pass: Str
                         navController.navigate("delivery/$encodedUrl/$uid/$pass")
                     } ,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
+                        containerColor =  MaterialTheme.colorScheme.primary //Color(0xFF639922)
                     ) ,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.DirectionsCar,
-                        contentDescription = null,
+                        imageVector = Icons.Default.DirectionsCar ,
+                        contentDescription = null ,
                         modifier = Modifier.size(ButtonDefaults.IconSize)
                     )
                     Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
@@ -112,11 +119,14 @@ fun MainScreen(navController: NavController , url: String , uid: Int , pass: Str
                 onClick = { navController.navigate("about") } ,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(56.dp) ,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF888780)
+                ) ,
             ) {
                 Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = null,
+                    imageVector = Icons.Default.Info ,
+                    contentDescription = null ,
                     modifier = Modifier.size(ButtonDefaults.IconSize)
                 )
                 Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
@@ -135,8 +145,8 @@ fun MainTopBar(navController: NavController) {
     TopAppBar(
         title = { Text("Huevos de gallinas felices") } ,
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer ,
-            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            containerColor = MaterialTheme.colorScheme.primary ,
+            titleContentColor = MaterialTheme.colorScheme.onPrimary
         ) ,
         actions = {
             IconButton(onClick = { showMenu = true }) {
