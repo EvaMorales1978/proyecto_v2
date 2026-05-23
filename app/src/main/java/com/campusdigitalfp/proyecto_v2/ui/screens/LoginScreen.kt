@@ -23,7 +23,7 @@ import com.campusdigitalfp.proyecto_v2.ui.viewmodel.AuthViewModel
 fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = viewModel()) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+  //  var errorMessage by remember { mutableStateOf<String?>(null) }
     var url by remember {mutableStateOf("http://192.168.1.243:8069/")}
     var visible by remember {mutableStateOf(false)}
     val context = LocalContext.current
@@ -35,7 +35,7 @@ fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = vi
                 val encodedUrl = Uri.encode(url)
                 Log.d("LOGIN_SUCCESS", "Navegando con UID: $id")
                 navController.navigate("main/$encodedUrl/$id/$password") {
-                    popUpTo("login") { inclusive = true }
+                    popUpTo(0) { inclusive = true }
                 }
             } else Toast.makeText(context , "Usuario o contraseña incorrectos." , Toast.LENGTH_SHORT).show()
 
@@ -77,7 +77,7 @@ fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = vi
         // 2. BOTÓN DE LOGIN
         Button(
             onClick = {
-                errorMessage = null
+              //  errorMessage = null
                 authViewModel.fetchUser(url,"prueba" , email , password)
             } ,
             modifier = Modifier.fillMaxWidth() ,
@@ -123,14 +123,14 @@ fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = vi
         }
 
 
-        // 4. MENSAJE DE ERROR
+      /*  // 4. MENSAJE DE ERROR
         errorMessage?.let {
             Text(
                 text = it ,
                 color = MaterialTheme.colorScheme.error ,
                 modifier = Modifier.padding(top = 8.dp)
             )
-        }
+        }*/
     }
 }
 
