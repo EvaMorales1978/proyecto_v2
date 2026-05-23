@@ -38,14 +38,14 @@ fun AboutScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.Top
         ) {
             Image(
-                painter = painterResource(id = R.drawable.ic_launcher_background),
+                painter = painterResource(id = R.drawable.logo_app),
                 contentDescription = "Logo de la aplicación",
                 modifier = Modifier.size(120.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Hábitos saludables",
+                text = "Gallinas Felices APP",
                 style = MaterialTheme.typography.titleLarge
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -54,15 +54,17 @@ fun AboutScreen(navController: NavHostController) {
                 text = "Versión: 1.0.0",
                 style = MaterialTheme.typography.bodyMedium
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "Habitos Saludables es una aplicación que te ayudará a llevar un estilo de vida saludable a través del seguimiento de hábitos diarios como la hidratación, la actividad física y el descanso.",
+                text = "Frescura en movimiento. Optimizamos el envasado y la logística de distribución de huevos para\n asegurar" +
+                        "que cada unidad llegue a su destino en perfectas condiciones, \n combinando tecnología, " +
+                        "rapidez y el mejor servicio..",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(horizontal = 16.dp),
-                textAlign = TextAlign.Justify // Alinea el texto al centro
+                textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Text(
                 text = "Desarrollado por Eva Morales",
