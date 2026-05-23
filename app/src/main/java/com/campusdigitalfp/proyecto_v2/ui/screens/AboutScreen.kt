@@ -72,12 +72,12 @@ fun AboutScreen(navController: NavHostController) {
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
+          /*  Button(
                 onClick = { navController.popBackStack()  },
                 modifier = Modifier.padding(vertical = 8.dp)
             ) {
                 Text(text = "Volver")
-            }
+            }*/
         }
     }
 }
