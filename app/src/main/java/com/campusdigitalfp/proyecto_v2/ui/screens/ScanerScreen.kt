@@ -1,5 +1,6 @@
 package com.campusdigitalfp.proyecto_v2.ui.screens
 
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.BorderStroke
@@ -18,13 +19,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.doubleFromBits
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.campusdigitalfp.proyecto_v2.data.repository.OdooRepositoryLotOrigin
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.launch
 
 @Composable
-fun ScanerScreenOrigen( navController: NavController ,url:String, uid: Int,pass:String) {
+fun ScanerScreenOrigen(navController: NavController , url: String , uid: Int , pass: String) {
 
     val context = LocalContext.current
 
@@ -35,6 +37,7 @@ fun ScanerScreenOrigen( navController: NavController ,url:String, uid: Int,pass:
     var nEscaneo by remember { mutableIntStateOf(0) }
 
     var origen by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
 
     val scanLauncher = rememberLauncherForActivityResult(
         contract = ScanContract() ,
@@ -47,12 +50,19 @@ fun ScanerScreenOrigen( navController: NavController ,url:String, uid: Int,pass:
 
                 if (lotName.isNotBlank()) {
                     scope.launch {
-                        origen = repository.getLotOrigin(url,db = "prueba",  uid = 8 ,pass = "111111", lot = lotName)
+                        isLoading = true
+                        origen = repository.getLotOrigin(
+                            url ,
+                            db = "prueba" ,
+                            uid = 8 ,
+                            pass = "111111" ,
+                            lot = lotName
+                        )
+                        isLoading = false
                     }
                 } else {
                     Toast.makeText(context , "QR inválido" , Toast.LENGTH_SHORT).show()
                 }
-
             } else {
                 Toast.makeText(context , "Escaneo cancelado" , Toast.LENGTH_SHORT).show()
             }
@@ -62,78 +72,73 @@ fun ScanerScreenOrigen( navController: NavController ,url:String, uid: Int,pass:
         topBar = {
             MainTopBarTexto("Origen")
         }
-    ){innerPadding->
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            //.padding(16.dp)
-            .padding(innerPadding),
-        verticalArrangement = Arrangement.Center ,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        OutlinedButton(
-            onClick = {
-                val options = ScanOptions().apply {
-                    setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                    setPrompt("Escanea un código QR")
-                    setBeepEnabled(true)
-                    setOrientationLocked(false)
-                }
-                scanLauncher.launch(options)
-            } ,
-            modifier = Modifier.size(200.dp) ,
-            shape = RoundedCornerShape(28.dp) ,
-            border = BorderStroke(3.dp , MaterialTheme.colorScheme.primary) ,
-            colors = ButtonDefaults.outlinedButtonColors(
-                containerColor = Color.White ,
-                contentColor = MaterialTheme.colorScheme.primary
-            )
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding) ,
+            verticalArrangement = Arrangement.Center ,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = Icons.Default.QrCodeScanner ,
-                contentDescription = "QR Icon" ,
-                modifier = Modifier.size(120.dp)
-            )
-        }
+            OutlinedButton(
+                onClick = {
+                    val options = ScanOptions().apply {
+                        setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+                        setPrompt("Escanea un código QR")
+                        setBeepEnabled(true)
+                        setOrientationLocked(false)
+                    }
+                    scanLauncher.launch(options)
+                } ,
+                modifier = Modifier.size(200.dp) ,
+                shape = RoundedCornerShape(28.dp) ,
+                border = BorderStroke(3.dp , MaterialTheme.colorScheme.primary) ,
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.White ,
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.QrCodeScanner ,
+                    contentDescription = "QR Icon" ,
+                    modifier = Modifier.size(120.dp)
+                )
+            }
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-        Text(
-            text = "Escanear Código QR" ,
-            style = MaterialTheme.typography.headlineMedium
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "Escanea el QR que aparece en el envase y podrás ver el origen de tus huevos." ,
-            textAlign = TextAlign.Center ,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(modifier = Modifier.height(48.dp))
-
-        if (origen.isNotBlank()) {
             Text(
-                text = "Origen del producto:" ,
-                style = MaterialTheme.typography.labelLarge
+                text = "Escanear Código QR" ,
+                style = MaterialTheme.typography.headlineMedium
             )
 
-            val cleanUrl = origen.trim().trim('"')
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
-                text = cleanUrl ,
-                fontSize = 20.sp ,
+                text = "Escanea el QR que aparece en el envase y podrás ver el origen de tus huevos." ,
                 textAlign = TextAlign.Center ,
-                style = MaterialTheme.typography.bodyLarge
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-        } else if (nEscaneo > 0) {
-            Text(
-                text = "El código escaneado no es correcto" ,
-                fontSize = 20.sp ,
-                color = MaterialTheme.colorScheme.error ,
-                style = MaterialTheme.typography.bodyLarge
-            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (isLoading) {
+                CircularProgressIndicator()
+            } else if (origen.isNotBlank()) {
+                val cleanUrl = origen.trim().trim('"')
+                AsyncImage(
+                    model = cleanUrl ,
+                    contentDescription = "Origen del producto" ,
+                    modifier = Modifier.size(600.dp)
+                )
+            } else if (nEscaneo > 0) {
+                Text(
+                    text = "El código escaneado no es correcto" ,
+                    fontSize = 20.sp ,
+                    color = MaterialTheme.colorScheme.error ,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
         }
     }
-}
 }
