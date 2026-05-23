@@ -22,7 +22,7 @@ fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = vi
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var url by remember {mutableStateOf("http://192.168.1.249:8069/")}
+    var url by remember {mutableStateOf("http://192.168.1.243:8069/")}
     var visible by remember {mutableStateOf(false)}
 
     // 1. ESCUCHADOR DE NAVEGACIÓN: Reacciona cuando authViewModel.uid cambia
@@ -93,7 +93,8 @@ fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = vi
         // 3. BOTÓN DE INVITADO
         Button(
             onClick = {
-                navController.navigate("main/0")
+                val encodedUrl = Uri.encode(url)
+                navController.navigate("main/$encodedUrl/0/111111")
             } ,
             modifier = Modifier.fillMaxWidth() ,
             colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.secondary)

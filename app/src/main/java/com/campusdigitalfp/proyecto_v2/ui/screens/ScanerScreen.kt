@@ -47,7 +47,7 @@ fun ScanerScreenOrigen( navController: NavController ,url:String, uid: Int,pass:
 
                 if (lotName.isNotBlank()) {
                     scope.launch {
-                        origen = repository.getLotOrigin(url,db = "prueba",  uid = uid ,pass = pass, lot = lotName)
+                        origen = repository.getLotOrigin(url,db = "prueba",  uid = 8 ,pass = "111111", lot = lotName)
                     }
                 } else {
                     Toast.makeText(context , "QR inválido" , Toast.LENGTH_SHORT).show()
