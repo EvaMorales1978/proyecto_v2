@@ -33,6 +33,7 @@ fun PickingListScreen(
     url: String,
     uid: Int,
     pass: String,
+    db: String,
     viewModel: PickingViewModel = viewModel()
 ) {
     var scannedLot by remember { mutableStateOf<String?>(null) }

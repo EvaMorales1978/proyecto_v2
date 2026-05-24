@@ -25,7 +25,7 @@ import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.launch
 
 @Composable
-fun ScanerScreenOrigen(navController: NavController , url: String , uid: Int , pass: String) {
+fun ScanerScreenOrigen(navController: NavController , url: String , uid: Int , pass: String, db:String) {
 
     val context = LocalContext.current
 
@@ -37,7 +37,7 @@ fun ScanerScreenOrigen(navController: NavController , url: String , uid: Int , p
 
     var origen by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
-    val db = "prueba"
+ //   val db = "prueba"
 
     val scanLauncher = rememberLauncherForActivityResult(
         contract = ScanContract() ,

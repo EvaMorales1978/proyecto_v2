@@ -23,12 +23,12 @@ import com.campusdigitalfp.proyecto_v2.R
 
 
 @Composable
-fun MainScreen(navController: NavController , url: String , uid: Int , pass: String) {
+fun MainScreen(navController: NavController , url: String , uid: Int , pass: String, db: String) {
 
     Scaffold(
-        topBar = {
+       /* topBar = {
             MainTopBar(navController = navController)
-        }
+        }*/
     ) { innerPadding ->
 
         Column(
@@ -48,7 +48,7 @@ fun MainScreen(navController: NavController , url: String , uid: Int , pass: Str
             Button(
                 onClick = {
                     val encodedUrl = Uri.encode(url)
-                    navController.navigate("scanerorigen/$encodedUrl/$uid/$pass")
+                    navController.navigate("scanerorigen/$encodedUrl/$uid/$pass/$db")
                 } ,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -72,7 +72,7 @@ fun MainScreen(navController: NavController , url: String , uid: Int , pass: Str
                 Button(
                     onClick = {
                         val encodedUrl = Uri.encode(url)
-                        navController.navigate("product/$encodedUrl/$uid/$pass")
+                        navController.navigate("product/$encodedUrl/$uid/$pass/$db")
                     } ,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -95,7 +95,7 @@ fun MainScreen(navController: NavController , url: String , uid: Int , pass: Str
                 Button(
                     onClick = {
                         val encodedUrl = Uri.encode(url)
-                        navController.navigate("delivery/$encodedUrl/$uid/$pass")
+                        navController.navigate("delivery/$encodedUrl/$uid/$pass/$db")
                     } ,
                     colors = ButtonDefaults.buttonColors(
                         containerColor =  MaterialTheme.colorScheme.primary

@@ -20,13 +20,15 @@ import com.campusdigitalfp.proyecto_v2.ui.viewmodel.AuthViewModel
 
 
 @Composable
-fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = viewModel()) {
+fun LoginScreen(
+    navController: NavController , db: String, authViewModel: AuthViewModel = viewModel()
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var url by remember {mutableStateOf("http://192.168.1.243:8069/")}
     var visible by remember {mutableStateOf(false)}
     val context = LocalContext.current
-    val db = "prueba"
+   // val db = "prueba"
 
 
     // 1. ESCUCHADOR DE NAVEGACIÓN: Reacciona cuando authViewModel.uid cambia
@@ -35,7 +37,7 @@ fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = vi
             if (id > 0) {
                 val encodedUrl = Uri.encode(url)
                 Log.d("LOGIN_SUCCESS", "Navegando con UID: $id")
-                navController.navigate("main/$encodedUrl/$id/$password") {
+                navController.navigate("main/$encodedUrl/$id/$password/$db") {
                     popUpTo(0) { inclusive = true }
                 }
             } else Toast.makeText(context , "Usuario o contraseña incorrectos." , Toast.LENGTH_SHORT).show()
@@ -94,7 +96,7 @@ fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = vi
         Button(
             onClick = {
                 val encodedUrl = Uri.encode(url)
-                navController.navigate("main/$encodedUrl/0/111111")
+                navController.navigate("main/$encodedUrl/0/111111/$db")
             } ,
             modifier = Modifier.fillMaxWidth() ,
             colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.secondary)

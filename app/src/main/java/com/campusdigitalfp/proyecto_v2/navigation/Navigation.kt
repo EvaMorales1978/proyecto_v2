@@ -19,30 +19,25 @@ import com.campusdigitalfp.proyecto_v2.ui.screens.ScanerScreenOrigen
 @Composable
 fun Navigation() {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "login") {
-        composable("login") { LoginScreen(navController ) }
+    val db = "prueba"
+
+    NavHost(navController = navController, startDestination = "login/$db") {
         composable(
-            route = "main/{url}/{id}/{password}",
+            route = "login/{db}",
             arguments = listOf(
-                navArgument("url") { type = NavType.StringType },
-                navArgument("id") { type = NavType.IntType },
-                navArgument("password") { type = NavType.StringType }
+                navArgument("db") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val encodedUrl = backStackEntry.arguments?.getString("url") ?: ""
-            val urlOriginal = Uri.decode(encodedUrl)
-
-            val id = backStackEntry.arguments?.getInt("id") ?: 0
-            val pass = backStackEntry.arguments?.getString("password") ?: ""
-
-            MainScreen(navController, urlOriginal, id, pass)
+            val db = backStackEntry.arguments?.getString("db") ?: ""
+            LoginScreen(navController, db)
         }
         composable(
-            route = "scanerorigen/{url}/{id}/{password}",
+            route = "main/{url}/{id}/{password}/{db}",
             arguments = listOf(
                 navArgument("url") { type = NavType.StringType },
                 navArgument("id") { type = NavType.IntType },
-                navArgument("password") { type = NavType.StringType }
+                navArgument("password") { type = NavType.StringType },
+                navArgument("db") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val encodedUrl = backStackEntry.arguments?.getString("url") ?: ""
@@ -50,17 +45,37 @@ fun Navigation() {
 
             val id = backStackEntry.arguments?.getInt("id") ?: 0
             val pass = backStackEntry.arguments?.getString("password") ?: ""
+            val db = backStackEntry.arguments?.getString("db") ?: ""
 
-            ScanerScreenOrigen(navController, urlOriginal, id, pass)
+            MainScreen(navController, urlOriginal, id, pass, db)
+        }
+        composable(
+            route = "scanerorigen/{url}/{id}/{password}/{db}",
+            arguments = listOf(
+                navArgument("url") { type = NavType.StringType },
+                navArgument("id") { type = NavType.IntType },
+                navArgument("password") { type = NavType.StringType },
+                navArgument("db") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val encodedUrl = backStackEntry.arguments?.getString("url") ?: ""
+            val urlOriginal = Uri.decode(encodedUrl)
+
+            val id = backStackEntry.arguments?.getInt("id") ?: 0
+            val pass = backStackEntry.arguments?.getString("password") ?: ""
+            val db = backStackEntry.arguments?.getString("db") ?: ""
+
+            ScanerScreenOrigen(navController, urlOriginal, id, pass,db)
         }
 
 
         composable(
-            route = "delivery/{url}/{id}/{password}",
+            route = "delivery/{url}/{id}/{password}/{db}",
             arguments = listOf(
                 navArgument("url") { type = NavType.StringType },
                 navArgument("id") { type = NavType.IntType },
-                navArgument("password") { type = NavType.StringType }
+                navArgument("password") { type = NavType.StringType },
+                navArgument("db") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val encodedUrl = backStackEntry.arguments?.getString("url") ?: ""
@@ -68,16 +83,18 @@ fun Navigation() {
 
             val id = backStackEntry.arguments?.getInt("id") ?: 0
             val pass = backStackEntry.arguments?.getString("password") ?: ""
+            val db = backStackEntry.arguments?.getString("db") ?: ""
 
-            PickingListScreen(navController, urlOriginal, id, pass)
+            PickingListScreen(navController, urlOriginal, id, pass, db)
         }
 
         composable(
-            route = "product/{url}/{id}/{password}",
+            route = "product/{url}/{id}/{password}/{db}",
             arguments = listOf(
                 navArgument("url") { type = NavType.StringType },
                 navArgument("id") { type = NavType.IntType },
-                navArgument("password") { type = NavType.StringType }
+                navArgument("password") { type = NavType.StringType },
+                navArgument("db") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val encodedUrl = backStackEntry.arguments?.getString("url") ?: ""
@@ -85,8 +102,9 @@ fun Navigation() {
 
             val id = backStackEntry.arguments?.getInt("id") ?: 0
             val pass = backStackEntry.arguments?.getString("password") ?: ""
+            val db = backStackEntry.arguments?.getString("db") ?: ""
 
-            ProductosListScreen(navController, urlOriginal, id, pass)
+            ProductosListScreen(navController, urlOriginal, id, pass,db)
         }
 
         composable("about") { AboutScreen(navController) }

@@ -37,9 +37,10 @@ fun ProductosListScreen(
     url: String ,
     uid: Int ,
     pass: String ,
+    db: String,
     viewModel: MoveViewModel = viewModel()
 ) {
-    val db = "prueba"
+   // val db = "prueba"
     val scope = rememberCoroutineScope()
     val listaDeMoves = viewModel.moves
     var scannerLocked by remember { mutableStateOf(false) }
