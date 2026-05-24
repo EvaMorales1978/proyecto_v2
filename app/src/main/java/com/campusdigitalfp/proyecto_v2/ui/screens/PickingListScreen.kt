@@ -175,8 +175,8 @@ fun MoveItem(
     val isCompleted = picking.move_line_ids.isNotEmpty() &&
             picking.move_line_ids.all { it.qty_done == it.reserved_qty }
     val cardColor = when (picking.state) {
-        "assigned" -> MaterialTheme.colorScheme.primaryContainer
-        "done" -> MaterialTheme.colorScheme.secondaryContainer
+        "assigned" -> MaterialTheme.colorScheme.secondaryContainer
+        "done" -> MaterialTheme.colorScheme.primaryContainer
         else -> MaterialTheme.colorScheme.surface
     }
     val accentColor = when (picking.state) {
