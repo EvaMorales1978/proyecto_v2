@@ -17,7 +17,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.doubleFromBits
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.campusdigitalfp.proyecto_v2.data.repository.OdooRepositoryLotOrigin
@@ -38,6 +37,7 @@ fun ScanerScreenOrigen(navController: NavController , url: String , uid: Int , p
 
     var origen by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+    val db = "prueba"
 
     val scanLauncher = rememberLauncherForActivityResult(
         contract = ScanContract() ,
@@ -53,7 +53,7 @@ fun ScanerScreenOrigen(navController: NavController , url: String , uid: Int , p
                         isLoading = true
                         origen = repository.getLotOrigin(
                             url ,
-                            db = "prueba" ,
+                            db = db ,
                             uid = 8 ,
                             pass = "111111" ,
                             lot = lotName

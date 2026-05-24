@@ -23,10 +23,11 @@ import com.campusdigitalfp.proyecto_v2.ui.viewmodel.AuthViewModel
 fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = viewModel()) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-  //  var errorMessage by remember { mutableStateOf<String?>(null) }
     var url by remember {mutableStateOf("http://192.168.1.243:8069/")}
     var visible by remember {mutableStateOf(false)}
     val context = LocalContext.current
+    val db = "prueba"
+
 
     // 1. ESCUCHADOR DE NAVEGACIÓN: Reacciona cuando authViewModel.uid cambia
     LaunchedEffect(authViewModel.uid) {
@@ -74,11 +75,9 @@ fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = vi
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 2. BOTÓN DE LOGIN
         Button(
             onClick = {
-              //  errorMessage = null
-                authViewModel.fetchUser(url,"prueba" , email , password)
+                authViewModel.fetchUser(url,db , email , password)
             } ,
             modifier = Modifier.fillMaxWidth() ,
             enabled = !authViewModel.isLoading
@@ -92,7 +91,6 @@ fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = vi
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 3. BOTÓN DE INVITADO
         Button(
             onClick = {
                 val encodedUrl = Uri.encode(url)
@@ -122,19 +120,9 @@ fun LoginScreen(navController: NavController , authViewModel: AuthViewModel = vi
             }
         }
 
-
-      /*  // 4. MENSAJE DE ERROR
-        errorMessage?.let {
-            Text(
-                text = it ,
-                color = MaterialTheme.colorScheme.error ,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }*/
     }
 }
 
-// Extensión rápida para el indicador de carga dentro del botón
 @Composable
 fun CircularProgressIndicator(size: androidx.compose.ui.unit.Dp , color: Color) {
     androidx.compose.material3.CircularProgressIndicator(

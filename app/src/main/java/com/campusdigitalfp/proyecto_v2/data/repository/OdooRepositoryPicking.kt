@@ -138,7 +138,7 @@ class OdooRepositoryPicking {
                                 } else {
                                     Log.w("ODOO_FLOW", "Partner $partnerId no encontrado, continuando sin partner")
                                 }
-                                pSuccess = true // ✅ Salir siempre, encuentre o no el partner
+                                pSuccess = true
 
                             } catch (e: Exception) {
                                 val isNetworkError = e is ProtocolException ||
@@ -151,7 +151,7 @@ class OdooRepositoryPicking {
                                     delay(1000)
                                 } else {
                                     Log.e("ODOO_FLOW", "Error partner no recuperable", e)
-                                    pSuccess = true // ✅ También salir en error no recuperable
+                                    pSuccess = true
                                     break
                                 }
                             }

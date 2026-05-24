@@ -16,7 +16,6 @@ import com.campusdigitalfp.proyecto_v2.domain.model.StockPicking
 class PickingViewModel : ViewModel() {
 
     private val repositoryPicking = OdooRepositoryPicking()
-  //  private val repository = OdooRepository()
 
     var pickings by mutableStateOf<List<StockPicking>>(emptyList())
     var isLoading by mutableStateOf(false)

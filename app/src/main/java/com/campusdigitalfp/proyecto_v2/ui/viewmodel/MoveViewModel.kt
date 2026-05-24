@@ -68,10 +68,9 @@ class MoveViewModel : ViewModel() {
                 Log.d("ODOO_CHECK", "Finalizado UpdateMoveLine. Estado de pickings: ${result.size}")
 
                 moveLineResult = result
-                //fetchMoves(url, db, uid, pass)
 
                 val updatedMoves = repositoryMove.getMovesGrouped(url, db, uid, pass)
-                updateMoves(updatedMoves)  // ← esto actualiza el State y recompone la pantalla
+                updateMoves(updatedMoves)
 
             } catch (e: IllegalArgumentException) {
                 moveLineError = e.message

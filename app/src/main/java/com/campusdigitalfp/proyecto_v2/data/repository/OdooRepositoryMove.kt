@@ -265,15 +265,6 @@ class OdooRepositoryMove {
     ) {
         val client = OdooClient(url)
 
-       /* val pickingDomain = buildJsonArray {
-            add(buildJsonArray {
-                add(buildJsonArray { add("state"); add("="); add("assigned") })
-                add(buildJsonArray { add("picking_type_id"); add("="); add(3) })
-            })
-        }*/
-
-
-
         val pickingDomain = buildJsonArray {
             add(buildJsonArray {
                 add(buildJsonArray {

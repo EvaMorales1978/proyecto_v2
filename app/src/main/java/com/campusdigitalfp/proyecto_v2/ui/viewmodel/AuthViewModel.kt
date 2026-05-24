@@ -30,7 +30,6 @@ class AuthViewModel() : ViewModel() {
         }
     }
 
-    // Función para resetear el estado al volver al login
     fun resetLogin() {
         uid = null
     }

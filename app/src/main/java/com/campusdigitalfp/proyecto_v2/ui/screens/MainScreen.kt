@@ -78,7 +78,7 @@ fun MainScreen(navController: NavController , url: String , uid: Int , pass: Str
                         .fillMaxWidth()
                         .height(56.dp) ,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor =  MaterialTheme.colorScheme.primary //Color(0xFF639922)
+                        containerColor =  MaterialTheme.colorScheme.primary
                     ) ,
                 ) {
                     Icon(
@@ -98,7 +98,7 @@ fun MainScreen(navController: NavController , url: String , uid: Int , pass: Str
                         navController.navigate("delivery/$encodedUrl/$uid/$pass")
                     } ,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor =  MaterialTheme.colorScheme.primary //Color(0xFF639922)
+                        containerColor =  MaterialTheme.colorScheme.primary
                     ) ,
                     modifier = Modifier
                         .fillMaxWidth()

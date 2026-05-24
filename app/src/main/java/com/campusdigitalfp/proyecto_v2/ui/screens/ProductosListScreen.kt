@@ -80,14 +80,12 @@ fun ProductosListScreen(
                     if (scannerLocked) return@ContinuousScanner
                     tone.startTone(
                         ToneGenerator.TONE_PROP_BEEP ,
-                        150 // milisegundos
+                        150
                     )
                     scannerLocked = true
 
                     val lotName = contenido.split("-" , limit = 2)[1].trim()
                     scannedLot = lotName
-
-                    //  viewModel.incrementarCantidad(productName)
 
                     Toast.makeText(
                         context ,
@@ -95,7 +93,6 @@ fun ProductosListScreen(
                         Toast.LENGTH_SHORT
                     ).show()
 
-                    // Reabre el scanner tras 2 segundos, el delay ha de ir dentro d un launch
                     scope.launch {
                         delay(2000)
                         scannerLocked = false
@@ -135,7 +132,7 @@ fun ProductosListScreen(
                             if (!validated) {
                                 OutlinedButton(
                                 onClick = {
-                                        validated = true  // bloquea inmediatamente
+                                        validated = true
                                         viewModel.validateAssignedPickings(url, db, uid, pass)
                                         Toast.makeText(
                                             context ,
@@ -179,7 +176,6 @@ fun ProductosListScreen(
     }
 }
 
-//Lo q va en cada una de las líneas
 @Composable
 fun MoveItem(move: StockMove) {
 
