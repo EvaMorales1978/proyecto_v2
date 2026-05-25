@@ -39,7 +39,7 @@ fun PickingListScreen(
     var scannedLot by remember { mutableStateOf<String?>(null) }
     var expandedPickingId by remember { mutableStateOf<Int?>(null) }
     var mostrarSoloPendientes by remember { mutableStateOf(false) }
-    val db = "prueba"
+    val db = db
 
     val snackbarHostState = remember { SnackbarHostState() }
 
