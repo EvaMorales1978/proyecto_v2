@@ -54,7 +54,7 @@ fun ScanerScreenOrigen(navController: NavController , url: String , uid: Int , p
                         origen = repository.getLotOrigin(
                             url ,
                             db = db ,
-                            uid = 8 ,
+                            uid = 2 ,
                             pass = "111111" ,
                             lot = lotName
                         )
@@ -127,7 +127,7 @@ fun ScanerScreenOrigen(navController: NavController , url: String , uid: Int , p
             } else if (origen.isNotBlank()) {
                 val cleanUrl = origen.trim().trim('"')
                 AsyncImage(
-                    model = cleanUrl ,
+                    model = cleanUrl,
                     contentDescription = "Origen del producto" ,
                     modifier = Modifier.size(600.dp)
                 )

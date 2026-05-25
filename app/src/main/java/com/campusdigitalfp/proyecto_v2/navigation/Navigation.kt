@@ -1,6 +1,7 @@
 package com.campusdigitalfp.proyecto.navigation
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -19,7 +20,7 @@ import com.campusdigitalfp.proyecto_v2.ui.screens.ScanerScreenOrigen
 @Composable
 fun Navigation() {
     val navController = rememberNavController()
-    val db = "prueba"
+    val db = "GallinasFelices"
 
     NavHost(navController = navController, startDestination = "login/$db") {
         composable(
@@ -46,6 +47,7 @@ fun Navigation() {
             val id = backStackEntry.arguments?.getInt("id") ?: 0
             val pass = backStackEntry.arguments?.getString("password") ?: ""
             val db = backStackEntry.arguments?.getString("db") ?: ""
+            Log.d("ODOO_FLOW", "Id: ${id}")
 
             MainScreen(navController, urlOriginal, id, pass, db)
         }
