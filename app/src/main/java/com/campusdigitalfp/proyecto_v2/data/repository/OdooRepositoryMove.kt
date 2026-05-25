@@ -140,13 +140,9 @@ class OdooRepositoryMove {
             is List<*>   -> p[0].toIntSafe()
             else -> throw IllegalArgumentException("El lote '$lotName' no tiene producto asociado")
         }
-
-        Log.d("ODOO_FLOW", "lotResult size: ${lotResult?.size}")
-        Log.d("ODOO_FLOW", "Buscando moves para productId: $productId")
-
+        var asignado = false
 
         // 2. Buscar TODOS los moves activos para ese producto en picking type 3
-        //    Añadimos product_qty y qty_done para comparar
         val moveDomain = buildJsonArray {
             add(buildJsonArray {
                 add(buildJsonArray { add("state");           add("="); add("assigned") })
@@ -156,12 +152,9 @@ class OdooRepositoryMove {
         }
 
         val moveResult = client.searchRead(db, uid, pass, "stock.move",
-            listOf("id", "picking_id", "location_id", "location_dest_id","product_uom", "product_qty", "quantity_done")
-            ,domain = moveDomain
+            listOf("id", "picking_id", "location_id", "location_dest_id", "product_uom", "product_qty", "quantity_done"),
+            domain = moveDomain
         )
-
-        Log.d("ODOO_FLOW", "moveResult size: ${moveResult?.size}")
-
 
         if (moveResult.isNullOrEmpty()) {
             throw IllegalArgumentException("No hay stock.move activo para el producto $productId")
@@ -176,14 +169,13 @@ class OdooRepositoryMove {
             val productQty = moveMap["product_qty"].toIntSafe()
             val qtyDone    = moveMap["qty_done"].toIntSafe()
 
-            // ← Condición clave: solo procesar si falta cantidad
             if (qtyDone >= productQty) continue
 
             val moveId    = moveMap["id"].toIntSafe()
             val pickingId = when (val pk = moveMap["picking_id"]) {
                 is JsonArray -> pk[0].toIntSafe()
                 is List<*>   -> pk[0].toIntSafe()
-                else -> continue  // sin picking, saltamos
+                else -> continue
             }
             val locationId = when (val l = moveMap["location_id"]) {
                 is JsonArray -> l[0].toIntSafe()
@@ -214,22 +206,29 @@ class OdooRepositoryMove {
                 })
             }
             val existingLines = client.searchRead(db, uid, pass, "stock.move.line",
-                listOf("id", "qty_done", "reference"), domain = lineDomain)
+                listOf("id", "qty_done", "reference", "reserved_uom_qty"), domain = lineDomain)
             val existingLine = existingLines?.getOrNull(0) as? Map<*, *>
 
-            val result = if (existingLine != null) {
+            val result = if (existingLine != null && !asignado) {
                 // 5a. Ya existe → sumar 1
                 val lineId     = existingLine["id"].toIntSafe()
                 val currentQty = existingLine["qty_done"].toIntSafe()
+                val reservedUomQty = existingLine["reserved_uom_qty"].toIntSafe()
+                Log.d("ODOO_PICKING", "Move line $lineId actualizada → currentQty: $currentQty")
+                Log.d("ODOO_PICKING", "Move line $lineId actualizada → reservedUomQty: $reservedUomQty")
+
+                if (reservedUomQty <= currentQty) {
+                    continue  
+                }
                 val newQty     = currentQty + 1.0
 
                 client.write(db, uid, pass, "stock.move.line", listOf(lineId), mapOf("qty_done" to newQty))
+                asignado = true
                 Log.d("ODOO_PICKING", "Move line $lineId actualizada → qty_done: $newQty")
 
-                mapOf("action" to "updated", "move_line_id" to lineId,
-                    "qty_done" to newQty, "picking_id" to pickingId)
+                mapOf("action" to "updated", "move_line_id" to lineId, "qty_done" to newQty, "picking_id" to pickingId)
 
-            } else {
+            } else if (existingLine == null && !asignado) {
                 // 5b. No existe → crear nueva línea
                 val newLineId = client.create(db, uid, pass, "stock.move.line",
                     mapOf(
@@ -244,13 +243,17 @@ class OdooRepositoryMove {
                         "location_dest_id" to locationDestId
                     )
                 )
+                asignado = true
                 Log.d("ODOO_PICKING", "Move line creada → id: $newLineId, qty_done: 1.0")
 
-                mapOf("action" to "created", "move_line_id" to newLineId,
-                    "qty_done" to 1.0, "picking_id" to pickingId)
+                mapOf("action" to "created", "move_line_id" to newLineId, "qty_done" to 1.0, "picking_id" to pickingId)
+
+            } else {
+                continue
             }
 
             results.add(result)
+            break
         }
 
         return if (results.size == 1) {
