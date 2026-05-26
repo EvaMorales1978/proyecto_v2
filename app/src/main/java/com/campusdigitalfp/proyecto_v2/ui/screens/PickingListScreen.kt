@@ -194,22 +194,25 @@ fun MoveItem(
     }
 
     if (expanded_scaner == true) {
-        ContinuousScanner(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp)
-        ) { contenido ->
-            if (scannerLocked) return@ContinuousScanner
-            tone.startTone(ToneGenerator.TONE_PROP_BEEP, 150)
-            scannerLocked = true
-            val lotName = contenido.split("-", limit = 2)[1].trim()
-            onLotScanned(lotName)
-            Toast.makeText(context, "Escaneado lote", Toast.LENGTH_SHORT).show()
-            scope.launch {
-                delay(2000)
-                scannerLocked = false
+        if (!isCompleted){
+            ContinuousScanner(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+            ) { contenido ->
+                if (scannerLocked) return@ContinuousScanner
+                tone.startTone(ToneGenerator.TONE_PROP_BEEP, 150)
+                scannerLocked = true
+                val lotName = contenido.split("-", limit = 2)[1].trim()
+                onLotScanned(lotName)
+                Toast.makeText(context, "Escaneado lote", Toast.LENGTH_SHORT).show()
+                scope.launch {
+                    delay(2000)
+                    scannerLocked = false
+                }
             }
         }
+
     }
 
     Row(
