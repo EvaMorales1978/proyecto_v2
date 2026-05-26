@@ -117,7 +117,8 @@ fun PickingListScreen(
                 items(listaFiltrada) { picking ->
                     MoveItem(
                         picking = picking,
-                        expanded = expandedPickingId == picking.id,
+                        expanded_lines = expandedPickingId == picking.id,
+                        expanded_scaner = if (picking.state == "assigned") expandedPickingId == picking.id else null,
                         onClick = {
                             expandedPickingId =
                                 if (expandedPickingId == picking.id) null else picking.id
@@ -163,7 +164,8 @@ fun BotonFiltroSimplePicking(texto: String, seleccionado: Boolean, onClick: () -
 @Composable
 fun MoveItem(
     picking: StockPicking,
-    expanded: Boolean,
+    expanded_lines: Boolean,
+    expanded_scaner: Boolean?,
     onClick: () -> Unit,
     onLotScanned: (String) -> Unit,
     onValidate: (Int) -> Unit,
@@ -191,7 +193,7 @@ fun MoveItem(
         else -> MaterialTheme.colorScheme.onSurface
     }
 
-    if (expanded) {
+    if (expanded_scaner == true) {
         ContinuousScanner(
             modifier = Modifier
                 .fillMaxWidth()
@@ -277,7 +279,7 @@ fun MoveItem(
                 )
             }
 
-            if (expanded) {
+            if (expanded_lines) {
                 Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Spacer(modifier = Modifier.height(6.dp))
