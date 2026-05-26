@@ -20,8 +20,8 @@ import java.net.SocketTimeoutException
 class OdooRepositoryPicking {
 
     fun Any?.toIntSafe(): Int = when (this) {
-        is Number      -> this.toInt()
-        is String      -> this.toDoubleOrNull()?.toInt() ?: 0
+        is Number -> this.toInt()
+        is String -> this.toDoubleOrNull()?.toInt() ?: 0
         is JsonPrimitive -> this.content.toDoubleOrNull()?.toInt() ?: 0
         else -> 0
     }
@@ -31,38 +31,31 @@ class OdooRepositoryPicking {
         else -> this?.toString() ?: ""
     }
 
-    suspend fun getPickings(url: String, db: String, uid: Int, pass: String): List<StockPicking> {
+    suspend fun getPickings(
+        url: String ,
+        db: String ,
+        uid: Int ,
+        pass: String
+    ): List<StockPicking> {
         val client = OdooClient(url)
 
-        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd" , java.util.Locale.getDefault())
             .format(java.util.Date())
+
         val pickingDomain = buildJsonArray {
             add(buildJsonArray {
-                add(buildJsonArray {
-                    add("state")
-                    add("in")
-                    add(buildJsonArray {
-                        add("assigned")
-                        add("done")
-                    })
-                })
-                add(buildJsonArray {
-                    add("picking_type_id")
-                    add("=")
-                    add(2)
-                })
-                add(buildJsonArray {
-                    add("scheduled_date")
-                    add(">=")
-                    add("$today 00:00:00")
-                })
-                add(buildJsonArray {
-                    add("scheduled_date")
-                    add("<=")
-                    add("$today 23:59:59")
-                })
+                add(JsonPrimitive("|"))
+                add(JsonPrimitive("&"))
+                add(JsonPrimitive("&"))
+                add(buildJsonArray { add("state"); add("="); add("done") })
+                add(buildJsonArray { add("picking_type_id"); add("="); add(2) })
+                add(buildJsonArray { add("date_done"); add(">="); add("$today 00:00:00") })
+                add(JsonPrimitive("&"))
+                add(buildJsonArray { add("state"); add("="); add("assigned") })
+                add(buildJsonArray { add("picking_type_id"); add("="); add(2) })
             })
         }
+
 
         var retryCount = 0
         val maxRetries = 3
@@ -71,21 +64,21 @@ class OdooRepositoryPicking {
             try {
                 val allPickings = mutableListOf<StockPicking>()
                 val pickingsDef = client.searchRead(
-                    db, uid, pass,
-                    "stock.picking",
-                    listOf("id", "name", "partner_id", "state", "move_line_ids"),
+                    db , uid , pass ,
+                    "stock.picking" ,
+                    listOf("id" , "name" , "partner_id" , "state" , "move_line_ids") ,
                     domain = pickingDomain
                 )
 
-                Log.d("ODOO_FLOW", "pickingsDef size: ${pickingsDef.size}")
+                Log.d("ODOO_FLOW" , "pickingsDef size: ${pickingsDef.size}")
 
                 for (item in pickingsDef) {
-                    val pickingMap = item as? Map<*, *> ?: continue
-                    Log.d("ODOO_FLOW", "pickingMap keys: ${pickingMap.keys}")
-                    Log.d("ODOO_FLOW", "pickingMap: $pickingMap")
+                    val pickingMap = item as? Map<* , *> ?: continue
+                    Log.d("ODOO_FLOW" , "pickingMap keys: ${pickingMap.keys}")
+                    Log.d("ODOO_FLOW" , "pickingMap: $pickingMap")
 
                     val pickingId = pickingMap["id"].toIntSafe()
-                    Log.d("ODOO_FLOW", "pickingId: $pickingId")
+                    Log.d("ODOO_FLOW" , "pickingId: $pickingId")
 
                     val rawPartner = pickingMap["partner_id"]
                     val partnerId = when (rawPartner) {
@@ -93,7 +86,7 @@ class OdooRepositoryPicking {
                         is List<*> -> rawPartner[0].toIntSafe()
                         else -> null
                     }
-                    Log.d("ODOO_FLOW", "partnerId: $partnerId")
+                    Log.d("ODOO_FLOW" , "partnerId: $partnerId")
 
                     var fullPartner: ResPartner? = null
 
@@ -112,31 +105,37 @@ class OdooRepositoryPicking {
                                         })
                                     })
                                 }
-                                Log.d("ODOO_FLOW", "partnerDomain: $partnerDomain") // debe imprimir [[\"id\",\"=\",3]]
+                                Log.d(
+                                    "ODOO_FLOW" ,
+                                    "partnerDomain: $partnerDomain"
+                                ) // debe imprimir [[\"id\",\"=\",3]]
 
                                 val partnersDef = client.searchRead(
-                                    db, uid, pass,
-                                    "res.partner",
-                                    listOf("id", "name", "street", "city","sequence_route"),
+                                    db , uid , pass ,
+                                    "res.partner" ,
+                                    listOf("id" , "name" , "street" , "city" , "sequence_route") ,
                                     domain = partnerDomain
                                 )
-                                Log.d("ODOO_FLOW", "partnersDef size: ${partnersDef?.size}")
+                                Log.d("ODOO_FLOW" , "partnersDef size: ${partnersDef?.size}")
 
-                                val pMap = partnersDef?.getOrNull(0) as? Map<*, *>
-                                Log.d("ODOO_FLOW", "pMap: $pMap")
+                                val pMap = partnersDef?.getOrNull(0) as? Map<* , *>
+                                Log.d("ODOO_FLOW" , "pMap: $pMap")
 
                                 if (pMap != null) {
                                     fullPartner = ResPartner(
-                                        id = pMap["id"].toIntSafe(),
-                                        name = pMap["name"].toStringSafe(),
-                                        street = pMap["street"].toStringSafe(),
-                                        city = pMap["city"].toStringSafe(),
-                                        sequence_route = pMap["sequence_route"].toIntSafe(),
+                                        id = pMap["id"].toIntSafe() ,
+                                        name = pMap["name"].toStringSafe() ,
+                                        street = pMap["street"].toStringSafe() ,
+                                        city = pMap["city"].toStringSafe() ,
+                                        sequence_route = pMap["sequence_route"].toIntSafe() ,
 
-                                    )
-                                    Log.d("ODOO_FLOW", "fullPartner: $fullPartner")
+                                        )
+                                    Log.d("ODOO_FLOW" , "fullPartner: $fullPartner")
                                 } else {
-                                    Log.w("ODOO_FLOW", "Partner $partnerId no encontrado, continuando sin partner")
+                                    Log.w(
+                                        "ODOO_FLOW" ,
+                                        "Partner $partnerId no encontrado, continuando sin partner"
+                                    )
                                 }
                                 pSuccess = true
 
@@ -147,10 +146,10 @@ class OdooRepositoryPicking {
                                         e.cause is ProtocolException
                                 if (isNetworkError) {
                                     pRetry++
-                                    Log.e("ODOO_FLOW", "Retry partner $pRetry - ${e.message}")
+                                    Log.e("ODOO_FLOW" , "Retry partner $pRetry - ${e.message}")
                                     delay(1000)
                                 } else {
-                                    Log.e("ODOO_FLOW", "Error partner no recuperable", e)
+                                    Log.e("ODOO_FLOW" , "Error partner no recuperable" , e)
                                     pSuccess = true
                                     break
                                 }
@@ -174,17 +173,27 @@ class OdooRepositoryPicking {
                                 })
                             }
                             val linesDef = client.searchRead(
-                                db, uid, pass,
-                                "stock.move.line",
-                                listOf("id", "product_id", "reserved_qty", "qty_done", "lot_name", "state"),
+                                db , uid , pass ,
+                                "stock.move.line" ,
+                                listOf(
+                                    "id" ,
+                                    "product_id" ,
+                                    "reserved_qty" ,
+                                    "qty_done" ,
+                                    "lot_name" ,
+                                    "state"
+                                ) ,
                                 domain = moveDomain
                             )
-                            Log.d("ODOO_FLOW", "linesDef size: ${linesDef?.size} for pickingId: $pickingId")
+                            Log.d(
+                                "ODOO_FLOW" ,
+                                "linesDef size: ${linesDef?.size} for pickingId: $pickingId"
+                            )
 
                             movelineList.clear()
 
                             linesDef?.forEach { moveObj ->
-                                val mMap = moveObj as? Map<*, *> ?: return@forEach
+                                val mMap = moveObj as? Map<* , *> ?: return@forEach
 
                                 val pData = mMap["product_id"]
                                 val product = Product(
@@ -192,7 +201,7 @@ class OdooRepositoryPicking {
                                         is JsonArray -> pData[0].toIntSafe()
                                         is List<*> -> pData[0].toIntSafe()
                                         else -> 0
-                                    },
+                                    } ,
                                     name = when (pData) {
                                         is JsonArray -> pData[1].toStringSafe()
                                         is List<*> -> pData[1].toStringSafe()
@@ -202,11 +211,11 @@ class OdooRepositoryPicking {
 
                                 movelineList.add(
                                     StockMoveLine(
-                                        id = mMap["id"].toIntSafe(),
-                                        product_id = product,
-                                        reserved_qty = mMap["reserved_qty"].toIntSafe(),
-                                        qty_done = mMap["qty_done"].toIntSafe(),
-                                        state = mMap["state"].toStringSafe(),
+                                        id = mMap["id"].toIntSafe() ,
+                                        product_id = product ,
+                                        reserved_qty = mMap["reserved_qty"].toIntSafe() ,
+                                        qty_done = mMap["qty_done"].toIntSafe() ,
+                                        state = mMap["state"].toStringSafe() ,
                                         lot_name = ""
                                     )
                                 )
@@ -221,10 +230,13 @@ class OdooRepositoryPicking {
                                     e.cause is ProtocolException
                             if (isNetworkError) {
                                 mRetry++
-                                Log.e("ODOO_FLOW", "Retry moves $mRetry ($pickingId) - ${e.message}")
+                                Log.e(
+                                    "ODOO_FLOW" ,
+                                    "Retry moves $mRetry ($pickingId) - ${e.message}"
+                                )
                                 delay(1000)
                             } else {
-                                Log.e("ODOO_FLOW", "Error moves no recuperable ($pickingId)", e)
+                                Log.e("ODOO_FLOW" , "Error moves no recuperable ($pickingId)" , e)
                                 break
                             }
                         }
@@ -232,43 +244,43 @@ class OdooRepositoryPicking {
 
                     allPickings.add(
                         StockPicking(
-                            id = pickingId,
-                            name = pickingMap["name"].toStringSafe(),
-                            partner_id = fullPartner,
-                            state = pickingMap["state"].toStringSafe(),
+                            id = pickingId ,
+                            name = pickingMap["name"].toStringSafe() ,
+                            partner_id = fullPartner ,
+                            state = pickingMap["state"].toStringSafe() ,
                             move_line_ids = movelineList
                         )
                     )
-                    Log.d("ODOO_FLOW", "allPickings size ahora: ${allPickings.size}")
+                    Log.d("ODOO_FLOW" , "allPickings size ahora: ${allPickings.size}")
                 }
 
-                Log.d("ODOO_FLOW", "return allPickings size: ${allPickings.size}")
+                Log.d("ODOO_FLOW" , "return allPickings size: ${allPickings.size}")
                 return allPickings
                     .sortedWith(
-                    compareBy(
-                        { it.partner_id == null },
-                        { it.partner_id?.sequence_route ?: Int.MIN_VALUE }
+                        compareBy(
+                            { it.partner_id == null } ,
+                            { it.partner_id?.sequence_route ?: Int.MIN_VALUE }
+                        )
                     )
-                )
 
             } catch (e: Exception) {
-                Log.e("ODOO_FLOW", "Error general retry $retryCount: ${e.message}", e)
+                Log.e("ODOO_FLOW" , "Error general retry $retryCount: ${e.message}" , e)
                 retryCount++
                 delay(1000)
             }
         }
-        Log.e("ODOO_FLOW", "Se agotaron los reintentos, devolviendo lista vacía")
+        Log.e("ODOO_FLOW" , "Se agotaron los reintentos, devolviendo lista vacía")
         return emptyList()
     }
 
     suspend fun UpdateMoveLine(
-        url: String,
-        db: String,
-        uid: Int,
-        pass: String,
-        pickingId: Int,
+        url: String ,
+        db: String ,
+        uid: Int ,
+        pass: String ,
+        pickingId: Int ,
         lotName: String
-    ): Map<String, Any> {
+    ): Map<String , Any> {
         val client = OdooClient(url)
 
         val lotDomain = buildJsonArray {
@@ -277,50 +289,50 @@ class OdooRepositoryPicking {
             })
         }
         val lotResult = client.searchRead(
-            db, uid, pass,
-            "stock.lot",
-            listOf("id", "name", "product_id"),
+            db , uid , pass ,
+            "stock.lot" ,
+            listOf("id" , "name" , "product_id") ,
             domain = lotDomain
         )
-        val lotMap = lotResult?.getOrNull(0) as? Map<*, *>
+        val lotMap = lotResult?.getOrNull(0) as? Map<* , *>
             ?: throw IllegalArgumentException("Lote '$lotName' no encontrado")
 
         val lotId = lotMap["id"].toIntSafe()
         val productId = when (val p = lotMap["product_id"]) {
             is JsonArray -> p[0].toIntSafe()
-            is List<*>   -> p[0].toIntSafe()
+            is List<*> -> p[0].toIntSafe()
             else -> throw IllegalArgumentException("El lote '$lotName' no tiene producto asociado")
         }
 
         val moveDomain = buildJsonArray {
             add(buildJsonArray {
                 add(buildJsonArray { add("picking_id"); add("="); add(pickingId) })
-                add(buildJsonArray { add("product_id");  add("="); add(productId) })
+                add(buildJsonArray { add("product_id"); add("="); add(productId) })
             })
         }
         val moveResult = client.searchRead(
-            db, uid, pass,
-            "stock.move",
-            listOf("id", "location_id", "location_dest_id", "product_uom"),
+            db , uid , pass ,
+            "stock.move" ,
+            listOf("id" , "location_id" , "location_dest_id" , "product_uom") ,
             domain = moveDomain
         )
-        val moveMap = moveResult?.getOrNull(0) as? Map<*, *>
+        val moveMap = moveResult?.getOrNull(0) as? Map<* , *>
             ?: throw IllegalArgumentException("No hay stock.move activo para el producto $productId en el picking $pickingId")
 
         val moveId = moveMap["id"].toIntSafe()
         val locationId = when (val l = moveMap["location_id"]) {
             is JsonArray -> l[0].toIntSafe()
-            is List<*>   -> l[0].toIntSafe()
+            is List<*> -> l[0].toIntSafe()
             else -> 0
         }
         val locationDestId = when (val l = moveMap["location_dest_id"]) {
             is JsonArray -> l[0].toIntSafe()
-            is List<*>   -> l[0].toIntSafe()
+            is List<*> -> l[0].toIntSafe()
             else -> 0
         }
         val uomId = when (val u = moveMap["product_uom"]) {
             is JsonArray -> u[0].toIntSafe()
-            is List<*>   -> u[0].toIntSafe()
+            is List<*> -> u[0].toIntSafe()
             else -> 0
         }
 
@@ -328,7 +340,7 @@ class OdooRepositoryPicking {
             add(buildJsonArray {
                 add(buildJsonArray { add("picking_id"); add("="); add(pickingId) })
                 add(buildJsonArray { add("product_id"); add("="); add(productId) })
-                add(buildJsonArray { add("lot_id");     add("="); add(lotId) })
+                add(buildJsonArray { add("lot_id"); add("="); add(lotId) })
                 add(buildJsonArray {
                     add("state"); add("not in")
                     add(buildJsonArray { add("done"); add("cancel") })
@@ -336,54 +348,61 @@ class OdooRepositoryPicking {
             })
         }
         val existingLines = client.searchRead(
-            db, uid, pass,
-            "stock.move.line",
-            listOf("id", "qty_done","reference"),
+            db , uid , pass ,
+            "stock.move.line" ,
+            listOf("id" , "qty_done" , "reference") ,
             domain = lineDomain
         )
-        val existingLine = existingLines?.getOrNull(0) as? Map<*, *>
+        val existingLine = existingLines?.getOrNull(0) as? Map<* , *>
 
         return if (existingLine != null) {
-            val lineId     = existingLine["id"].toIntSafe()
+            val lineId = existingLine["id"].toIntSafe()
             val currentQty = existingLine["qty_done"].toIntSafe()
-            val newQty     = currentQty + 1.0
+            val newQty = currentQty + 1.0
 
-            Log.d("ODOO_AUTH", "UID autenticado: $uid")
+            Log.d("ODOO_AUTH" , "UID autenticado: $uid")
 
-            val writeResult = client.write(db, uid, pass, "stock.move.line", listOf(lineId), mapOf("qty_done" to newQty))
-            Log.d("ODOO_PICKING", "Write result: $writeResult")
+            val writeResult = client.write(
+                db ,
+                uid ,
+                pass ,
+                "stock.move.line" ,
+                listOf(lineId) ,
+                mapOf("qty_done" to newQty)
+            )
+            Log.d("ODOO_PICKING" , "Write result: $writeResult")
 
-            Log.d("ODOO_PICKING", "Move line $lineId actualizada → qty_done: $newQty")
-            mapOf("action" to "updated", "move_line_id" to lineId, "qty_done" to newQty)
+            Log.d("ODOO_PICKING" , "Move line $lineId actualizada → qty_done: $newQty")
+            mapOf("action" to "updated" , "move_line_id" to lineId , "qty_done" to newQty)
 
         } else {
             val newLineId = client.create(
-                db, uid, pass,
-                "stock.move.line",
+                db , uid , pass ,
+                "stock.move.line" ,
                 mapOf(
-                    "picking_id"       to pickingId,
-                    "move_id"          to moveId,
-                    "product_id"       to productId,
-                    "lot_id"           to lotId,
-                    "qty_done"         to 1.0,
-                    "reserved_uom_qty" to 0.0,
-                    "product_uom_id"   to uomId,
-                    "location_id"      to locationId,
+                    "picking_id" to pickingId ,
+                    "move_id" to moveId ,
+                    "product_id" to productId ,
+                    "lot_id" to lotId ,
+                    "qty_done" to 1.0 ,
+                    "reserved_uom_qty" to 0.0 ,
+                    "product_uom_id" to uomId ,
+                    "location_id" to locationId ,
                     "location_dest_id" to locationDestId
                 )
             )
 
-            Log.d("ODOO_PICKING", "Move line creada → id: $newLineId, qty_done: 1.0")
-            mapOf("action" to "created", "move_line_id" to newLineId, "qty_done" to 1.0)
+            Log.d("ODOO_PICKING" , "Move line creada → id: $newLineId, qty_done: 1.0")
+            mapOf("action" to "created" , "move_line_id" to newLineId , "qty_done" to 1.0)
         }
     }
 
 
     suspend fun buttonValidate(
-        url: String,
-        db: String,
-        uid: Int,
-        pass: String,
+        url: String ,
+        db: String ,
+        uid: Int ,
+        pass: String ,
         pickingId: Int
     ): JsonElement {
         val client = OdooClient(url)
@@ -393,7 +412,7 @@ class OdooRepositoryPicking {
             })
         }
 
-        return client.callKw(db, uid, pass, "stock.picking", "button_validate", args)
+        return client.callKw(db , uid , pass , "stock.picking" , "button_validate" , args)
     }
 
 
