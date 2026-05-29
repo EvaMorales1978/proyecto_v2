@@ -97,6 +97,9 @@ fun LoginScreen(
             onClick = {
                 val encodedUrl = Uri.encode(url)
                 navController.navigate("main/$encodedUrl/0/111111/$db")
+                {
+                    popUpTo(0) { inclusive = true }
+                }
             } ,
             modifier = Modifier.fillMaxWidth() ,
             colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.secondary)
