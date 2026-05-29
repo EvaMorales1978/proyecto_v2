@@ -211,7 +211,13 @@ fun MoveItem(
                 if (scannerLocked) return@ContinuousScanner
                 tone.startTone(ToneGenerator.TONE_PROP_BEEP, 150)
                 scannerLocked = true
-                val lotName = contenido.split("-", limit = 2)[1].trim()
+                val partes_escaneo = contenido.split("-", limit = 2)
+                if (partes_escaneo.size < 2) {
+                    Toast.makeText(context, "Código no válido: $contenido", Toast.LENGTH_SHORT).show()
+                    scannerLocked = false
+                    return@ContinuousScanner
+                }
+                val lotName = partes_escaneo[1].trim()
                 onLotScanned(lotName)
                 Toast.makeText(context, "Escaneado lote", Toast.LENGTH_SHORT).show()
                 scope.launch {
