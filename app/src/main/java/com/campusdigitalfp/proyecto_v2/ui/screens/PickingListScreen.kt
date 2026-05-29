@@ -40,10 +40,18 @@ fun PickingListScreen(
     var expandedPickingId by remember { mutableStateOf<Int?>(null) }
     var mostrarSoloPendientes by remember { mutableStateOf(false) }
     val db = db
+    val context = LocalContext.current
 
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) { viewModel.fetchPickings(url, db, uid, pass) }
+
+    LaunchedEffect(viewModel.moveLineError) {
+        viewModel.moveLineError?.let { error ->
+            Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+            viewModel.moveLineError = null
+        }
+    }
 
     LaunchedEffect(scannedLot) {
         scannedLot?.let { lot ->

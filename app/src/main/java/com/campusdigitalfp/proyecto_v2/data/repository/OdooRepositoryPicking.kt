@@ -327,7 +327,7 @@ class OdooRepositoryPicking {
         if (pendingMoves.isEmpty()) {
             return mapOf(
                 "success" to false,
-                "message" to "Todos los movimientos del picking $pickingId para el lote '$lotName' ya están completados"
+                "message" to "El picking $pickingId not tiene movimientos pendientes para el producto correspondiente al lote '$lotName'."
             )
         }
         val moveMap = pendingMoves.first()

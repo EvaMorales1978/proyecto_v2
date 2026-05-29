@@ -62,7 +62,11 @@ class PickingViewModel : ViewModel() {
                     pickingId, lotName
                 )
                 moveLineResult = result
-                fetchPickings(url, db, uid, pass)
+                if (result["success"] == false) {
+                    moveLineError = result["message"] as? String
+                } else {
+                    fetchPickings(url, db, uid, pass)
+                }
             } catch (e: IllegalArgumentException) {
                 moveLineError = e.message
             } catch (e: Exception) {
