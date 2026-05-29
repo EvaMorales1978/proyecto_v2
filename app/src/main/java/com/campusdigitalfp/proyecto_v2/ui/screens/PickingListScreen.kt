@@ -311,7 +311,8 @@ fun MoveItem(
                             modifier = Modifier.weight(1f)
                         )
                         Text(
-                            text = "${line.qty_done} / ${line.reserved_qty}",
+                            text = if (picking.state == "assigned")  "${line.qty_done} / ${line.reserved_qty}"
+                            else   "${line.qty_done} ",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
                             color = if (lineCompleta) MaterialTheme.colorScheme.tertiary
