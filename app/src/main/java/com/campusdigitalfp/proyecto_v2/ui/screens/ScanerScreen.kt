@@ -145,8 +145,12 @@ fun ScanerScreenOrigen(
                             textoEscaneado = codigo
                             nEscaneo++
 
-                            val partes = textoEscaneado.split("-", limit = 2)
-                            val lotName = if (partes.size >= 2) partes[1] else ""
+                            val partes_escaneo = codigo.split("-", limit = 2)
+                            if (partes_escaneo.size < 2) {
+                                Toast.makeText(context, "Código no válido: $codigo", Toast.LENGTH_SHORT).show()
+                                return@ContinuousScanner
+                            }
+                            val lotName = partes_escaneo[1].trim()
 
                             if (lotName.isNotBlank()) {
                                 scope.launch {
