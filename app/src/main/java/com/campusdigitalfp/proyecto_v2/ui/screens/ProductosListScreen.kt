@@ -62,7 +62,6 @@ fun ProductosListScreen(
 
     LaunchedEffect(scannedLot) {
         Log.e("ODOO_lauch" , "Entra")
-
         scannedLot?.let { lot ->
             viewModel.processScannedLotMove(url , db , uid , pass , lot)
             scannedLot = null
@@ -92,15 +91,15 @@ fun ProductosListScreen(
                         150
                     )
                     scannerLocked = true
-
-                    val lotName = contenido.split("-" , limit = 2)[1].trim()
+                    val partesEscaneo = contenido.split("-", limit = 2)
+                    if (partesEscaneo.size < 2) {
+                        Toast.makeText(context, "Código no válido: $contenido", Toast.LENGTH_SHORT).show()
+                        scannerLocked = false
+                        return@ContinuousScanner
+                    }
+                    val lotName =  partesEscaneo[1].trim()
                     scannedLot = lotName
-
-                    Toast.makeText(
-                        context ,
-                        "Sumado: $lotName" ,
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(context ,"Sumado: $lotName" ,Toast.LENGTH_SHORT).show()
 
                     scope.launch {
                         delay(2000)
