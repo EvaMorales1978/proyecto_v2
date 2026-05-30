@@ -156,7 +156,7 @@ fun ProductosListScreen(
                             }
 
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
+                        /*Spacer(modifier = Modifier.width(16.dp))
                         OutlinedButton(
                             onClick = { navController.popBackStack() } ,
                             modifier = Modifier.wrapContentWidth() ,
@@ -168,7 +168,7 @@ fun ProductosListScreen(
                                 modifier = Modifier.size(120.dp) ,
                                 tint = MaterialTheme.colorScheme.primary
                             )
-                        }
+                        }*/
                     }
 
                 }
