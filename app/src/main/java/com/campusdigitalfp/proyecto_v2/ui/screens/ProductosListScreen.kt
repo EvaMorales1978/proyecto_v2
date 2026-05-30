@@ -49,6 +49,14 @@ fun ProductosListScreen(
     var scannedLot by remember { mutableStateOf<String?>(null) }
     var validated by remember { mutableStateOf(false) }
 
+    val moveLineError = viewModel.moveLineError
+
+    LaunchedEffect(moveLineError) {
+        moveLineError?.let {
+            Toast.makeText(context, "❌ $it", Toast.LENGTH_LONG).show()
+            viewModel.moveLineError = null
+        }
+    }
 
     LaunchedEffect(Unit) { viewModel.fetchMoves(url , db , uid , pass) }
 

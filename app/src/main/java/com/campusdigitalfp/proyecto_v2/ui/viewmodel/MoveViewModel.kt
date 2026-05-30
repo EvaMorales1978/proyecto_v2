@@ -25,6 +25,8 @@ class MoveViewModel : ViewModel() {
     var validateSuccess by mutableStateOf<Boolean?>(null)
     var validateError by mutableStateOf<String?>(null)
 
+    var moveLineAlreadyComplete by mutableStateOf(0)
+
     private fun updateMoves(newMoves: List<StockMove>) {
         moves = newMoves
         allMovesCompleted = newMoves.isNotEmpty() && newMoves.all { it.product_done == it.product_qty }
@@ -67,11 +69,17 @@ class MoveViewModel : ViewModel() {
                 )
                 Log.d("ODOO_CHECK", "Finalizado UpdateMoveLine. Estado de pickings: ${result.size}")
 
+                if (result["success"] == false) {
+                    moveLineError = result["message"] as? String
+                        ?: "No hay movimientos pendientes para este lote."
+                    return@launch
+                }
                 moveLineResult = result
 
                 val updatedMoves = repositoryMove.getMovesGrouped(url, db, uid, pass)
                 updateMoves(updatedMoves)
-
+            } catch (e: IllegalStateException) {
+                moveLineAlreadyComplete++
             } catch (e: IllegalArgumentException) {
                 moveLineError = e.message
             } catch (e: Exception) {
