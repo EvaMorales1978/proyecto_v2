@@ -25,7 +25,13 @@ import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.launch
 
 @Composable
-fun ScanerScreenOrigen(navController: NavController , url: String , uid: Int , pass: String, db:String) {
+fun ScanerScreenOrigen(
+    navController: NavController,
+    url: String,
+    uid: Int,
+    pass: String,
+    db: String
+) {
 
     val context = LocalContext.current
 
@@ -37,34 +43,36 @@ fun ScanerScreenOrigen(navController: NavController , url: String , uid: Int , p
 
     var origen by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
- //   val db = "prueba"
+
+    var mostrarScanner by remember { mutableStateOf(false) }
+    //   val db = "prueba"
 
     val scanLauncher = rememberLauncherForActivityResult(
-        contract = ScanContract() ,
+        contract = ScanContract(),
         onResult = { result ->
             if (result.contents != null) {
                 textoEscaneado = result.contents
                 nEscaneo++
-                val partes = textoEscaneado.split("-" , limit = 2)
+                val partes = textoEscaneado.split("-", limit = 2)
                 val lotName = if (partes.size >= 2) partes[1] else ""
 
                 if (lotName.isNotBlank()) {
                     scope.launch {
                         isLoading = true
                         origen = repository.getLotOrigin(
-                            url ,
-                            db = db ,
-                            uid = 2 ,
-                            pass = "111111" ,
+                            url,
+                            db = db,
+                            uid = 2,
+                            pass = "111111",
                             lot = lotName
                         )
                         isLoading = false
                     }
                 } else {
-                    Toast.makeText(context , "QR inválido" , Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "QR inválido", Toast.LENGTH_SHORT).show()
                 }
             } else {
-                Toast.makeText(context , "Escaneo cancelado" , Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Escaneo cancelado", Toast.LENGTH_SHORT).show()
             }
         }
     )
@@ -76,31 +84,33 @@ fun ScanerScreenOrigen(navController: NavController , url: String , uid: Int , p
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding) ,
-            verticalArrangement = Arrangement.Center ,
+                .padding(innerPadding),
+            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             OutlinedButton(
                 onClick = {
-                    val options = ScanOptions().apply {
-                        setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                        setPrompt("Escanea un código QR")
-                        setBeepEnabled(true)
-                        setOrientationLocked(false)
-                    }
-                    scanLauncher.launch(options)
-                } ,
-                modifier = Modifier.size(200.dp) ,
-                shape = RoundedCornerShape(28.dp) ,
-                border = BorderStroke(3.dp , MaterialTheme.colorScheme.primary) ,
+                    mostrarScanner = true
+                    /* val options = ScanOptions().apply {
+                         setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+                         setPrompt("Escanea un código QR")
+                         setBeepEnabled(true)
+                         setOrientationLocked(false)
+                     }
+                     scanLauncher.launch(options)*/
+                },
+                enabled = !mostrarScanner,
+                modifier = Modifier.size(200.dp),
+                shape = RoundedCornerShape(28.dp),
+                border = BorderStroke(3.dp, MaterialTheme.colorScheme.primary),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = Color.White ,
+                    containerColor = Color.White,
                     contentColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Icon(
-                    imageVector = Icons.Default.QrCodeScanner ,
-                    contentDescription = "QR Icon" ,
+                    imageVector = Icons.Default.QrCodeScanner,
+                    contentDescription = "QR Icon",
                     modifier = Modifier.size(120.dp)
                 )
             }
@@ -108,37 +118,76 @@ fun ScanerScreenOrigen(navController: NavController , url: String , uid: Int , p
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "Escanear Código QR" ,
+                text = "Escanear Código QR",
                 style = MaterialTheme.typography.headlineMedium
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Escanea el QR que aparece en el envase y podrás ver el origen de tus huevos." ,
-                textAlign = TextAlign.Center ,
+                text = "Escanea el QR que aparece en el envase y podrás ver el origen de tus huevos.",
+                textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (isLoading) {
-                CircularProgressIndicator()
-            } else if (origen.isNotBlank()) {
-                val cleanUrl = origen.trim().trim('"')
-                AsyncImage(
-                    model = cleanUrl,
-                    contentDescription = "Origen del producto" ,
-                    modifier = Modifier.size(600.dp)
-                )
-            } else if (nEscaneo > 0) {
-                Text(
-                    text = "El código escaneado no es correcto" ,
-                    fontSize = 20.sp ,
-                    color = MaterialTheme.colorScheme.error ,
-                    style = MaterialTheme.typography.bodyLarge
+            if (mostrarScanner) {
+                val procesando = remember { mutableStateOf(false) }
+                ContinuousScanner(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp),
+                    onScan = { codigo ->
+                        if (!procesando.value) {
+                            procesando.value = true
+                            mostrarScanner = false
+                            textoEscaneado = codigo
+                            nEscaneo++
+
+                            val partes = textoEscaneado.split("-", limit = 2)
+                            val lotName = if (partes.size >= 2) partes[1] else ""
+
+                            if (lotName.isNotBlank()) {
+                                scope.launch {
+                                    isLoading = true
+                                    origen = repository.getLotOrigin(
+                                        url,
+                                        db = db,
+                                        uid = 2,
+                                        pass = "111111",
+                                        lot = lotName
+                                    )
+                                    isLoading = false
+                                }
+                            } else {
+                                Toast.makeText(context, "QR inválido", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
                 )
             }
+            if (!mostrarScanner) {
+                if (isLoading) {
+                    CircularProgressIndicator()
+                } else if (origen.isNotBlank()) {
+                    val cleanUrl = origen.trim().trim('"')
+                    AsyncImage(
+                        model = cleanUrl,
+                        contentDescription = "Origen del producto",
+                        modifier = Modifier.size(600.dp)
+                    )
+                } else if (nEscaneo > 0) {
+                    Text(
+                        text = "El código escaneado no es correcto",
+                        fontSize = 20.sp,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+
+
         }
     }
 }
